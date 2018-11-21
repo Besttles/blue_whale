@@ -1,2 +1,4 @@
 # blue_whale
-技术文档
+## springBoot
+## redis
+## mysql

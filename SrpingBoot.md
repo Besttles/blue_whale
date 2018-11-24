@@ -100,3 +100,5 @@ ubuntu系统安装mysql，注意版本，5.7之后的版本在设置外部访问
 
 [常规数据库连接池原理]: https://mp.weixin.qq.com/s/tLysIX9KChNioJ-fMMimxw
 
+#### sql 优化
+

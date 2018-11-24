@@ -90,3 +90,13 @@ Background saving started
 
 [AOF持久化]: https://redisbook.readthedocs.io/en/latest/internal/aof.html
 
+## mysql
+
+ubuntu系统安装mysql，注意版本，5.7之后的版本在设置外部访问，和用户创建方面有些需要注意的地方
+
+#### 连接池：druid 连接池
+
+简介：
+
+[常规数据库连接池原理]: https://mp.weixin.qq.com/s/tLysIX9KChNioJ-fMMimxw
+

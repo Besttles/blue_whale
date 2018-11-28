@@ -66,7 +66,40 @@ vi /etc/redis/redis.conf
 由于Redis的数据都存放在内存中，如果没有配置持久化，redis重启后数据就全丢失了，于是需要开启redis的持久化功能，将数据保存到磁盘上，当redis重启后，可以从磁盘中恢复数据。redis提供两种方式进行持久化，一种是RDB持久化（原理是将Reids在内存中的数据库记录定时dump到磁盘上的RDB持久化），另外一种是AOF持久化（原理是将Reids的操作日志以追加的方式写入文件）。
 
 - RDB 将数据库的快照（snapshot）以二进制的方式保存到磁盘中。
+
 - AOF 则以协议文本的方式，将所有对数据库进行过写入的命令（及其参数）记录到 AOF 文件，以此达到记录数据库状态的目的。
+
+  - `rdbSave` 会将数据库数据保存到 RDB 文件，并在保存完成之前阻塞调用者。
+
+  - [SAVE](http://redis.readthedocs.org/en/latest/server/save.html#save) 命令直接调用 `rdbSave` ，阻塞 Redis 主进程； [BGSAVE](http://redis.readthedocs.org/en/latest/server/bgsave.html#bgsave) 用子进程调用 `rdbSave` ，主进程仍可继续处理命令请求。
+
+  - [SAVE](http://redis.readthedocs.org/en/latest/server/save.html#save) 执行期间， AOF 写入可以在后台线程进行， [BGREWRITEAOF](http://redis.readthedocs.org/en/latest/server/bgrewriteaof.html#bgrewriteaof) 可以在子进程进行，所以这三种操作可以同时进行。
+
+  - 为了避免产生竞争条件， [BGSAVE](http://redis.readthedocs.org/en/latest/server/bgsave.html#bgsave) 执行时， [SAVE](http://redis.readthedocs.org/en/latest/server/save.html#save) 命令不能执行。
+
+  - 为了避免性能问题， [BGSAVE](http://redis.readthedocs.org/en/latest/server/bgsave.html#bgsave) 和 [BGREWRITEAOF](http://redis.readthedocs.org/en/latest/server/bgrewriteaof.html#bgrewriteaof) 不能同时执行。
+
+  - 调用 `rdbLoad` 函数载入 RDB 文件时，不能进行任何和数据库相关的操作，不过订阅与发布方面的命令可以正常执行，因为它们和数据库不相关联。
+
+  - RDB 文件的组织方式如下：
+
+    ```
+    +-------+-------------+-----------+-----------------+-----+-----------+
+    | REDIS | RDB-VERSION | SELECT-DB | KEY-VALUE-PAIRS | EOF | CHECK-SUM |
+    +-------+-------------+-----------+-----------------+-----+-----------+
+    
+                          |<-------- DB-DATA ---------->|
+    ```
+
+  - 键值对在 RDB 文件中的组织方式如下：
+
+    ```
+    +----------------------+---------------+-----+-------+
+    | OPTIONAL-EXPIRE-TIME | TYPE-OF-VALUE | KEY | VALUE |
+    +----------------------+---------------+-----+-------+
+    ```
+
+    RDB 文件使用不同的格式来保存不同类型的值。
 
 ##### RDB
 
@@ -89,6 +122,10 @@ Background saving started
 ##### AOF
 
 [AOF持久化]: https://redisbook.readthedocs.io/en/latest/internal/aof.html
+
+
+
+
 
 ## mysql
 

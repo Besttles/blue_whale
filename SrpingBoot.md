@@ -343,3 +343,209 @@ ubuntu系统安装mysql，注意版本，5.7之后的版本在设置外部访问
 
 #### sql 优化
 
+## dubbo
+
+一个远程服务调用的分布式框架
+
+**远程通讯**：提供多种基于长连接的NIO框架的抽象封装，包括多种线程模型，序列化，以及“请求-响应”的信息交换方式
+
+**集群容错**：提供基于接口方法的透明远程调用，包括多种协议支持，以及软件负载均衡，失败容错，地址路由，动态配置等集群支持
+
+**自动发现**：基于注册中心的目录服务，使服务消费方能动态查找服务提供方，使地址透明，使服务提供方可以平滑的增加或减少机器
+
+### 源码分析
+
+SpringBoot的自动配置初始化服务
+
+```java
+    @Override
+    public void initialize(ConfigurableApplicationContext applicationContext) {
+        Environment env = applicationContext.getEnvironment();
+        String scan = env.getProperty("spring.dubbo.scan");
+        if (scan != null) {
+            AnnotationBean scanner = BeanUtils.instantiate(AnnotationBean.class);
+            scanner.setPackage(scan);
+            scanner.setApplicationContext(applicationContext);
+            applicationContext.addBeanFactoryPostProcessor(scanner);
+            applicationContext.getBeanFactory().addBeanPostProcessor(scanner);
+            applicationContext.getBeanFactory().registerSingleton("annotationBean", scanner);
+        }
+
+```
+
+会获取对应再在自动配置类中的`spring.dubbo.scan`属性的值
+
+```java
+@ConfigurationProperties(prefix = "spring.dubbo")
+public class DubboProperties {
+
+    private String scan; //设置扫描包的路径
+
+    private ApplicationConfig application;
+
+    private RegistryConfig registry;
+
+    private ProtocolConfig protocol;
+}
+```
+
+RegistryConfig.  配置文件被封装成RefistryConfig.class
+
+```java
+public class RegistryConfig extends AbstractConfig {
+
+	private static final long serialVersionUID = 5508512956753757169L;
+	
+	public static final String NO_AVAILABLE = "N/A";
+
+    // 注册中心地址
+    private String            address;
+    
+	// 注册中心登录用户名
+    private String            username;
+
+    // 注册中心登录密码
+    private String            password;
+
+    // 注册中心缺省端口
+    private Integer           port;
+    
+    // 注册中心协议
+    private String            protocol;
+
+    // 客户端实现
+    private String            transporter;
+    
+    private String            server;
+    
+    private String            client;
+
+    private String            cluster;
+    
+    private String            group;
+
+	private String            version;
+
+    // 注册中心请求超时时间(毫秒)
+    private Integer           timeout;
+
+    // 注册中心会话超时时间(毫秒)
+    private Integer           session;
+    
+    // 动态注册中心列表存储文件
+    private String            file;
+    
+    // 停止时等候完成通知时间
+    private Integer           wait;
+    
+    // 启动时检查注册中心是否存在
+    private Boolean           check;
+
+    // 在该注册中心上注册是动态的还是静态的服务
+    private Boolean           dynamic;
+    
+    // 在该注册中心上服务是否暴露
+    private Boolean           register;
+    
+    // 在该注册中心上服务是否引用
+    private Boolean           subscribe;
+
+    // 自定义参数
+    private Map<String, String> parameters;
+
+    // 是否为缺省
+    private Boolean             isDefault;
+}
+    
+```
+
+```java
+    private void doExportUrls() {
+        //该方法根据配置文件转配成一个url的list
+        List<URL> registryURLs = loadRegistries(true);
+        //根据每一个协议配置分别来暴露服务
+        for (ProtocolConfig protocolConfig : protocols) {
+            doExportUrlsFor1Protocol(protocolConfig, registryURLs);
+        }
+    }
+```
+
+这个protocols长这个样子<dubbo:protocol name="dubbo" port="20888" id="dubbo" /> protocols也是根据配置装配出来的。接下来让我们进入doExportUrlsFor1Protocol方法看看dubbo具体是怎么样将服务暴露出去的。这个方法特别大，有将近300多行代码，但是其中大部分都是获取类似protocols的name、port、host和一些必要的上下文
+
+组装url的方法：
+
+```java
+com.alibaba.dubbo.config.ServiceConfig.class.doExportUrlsFor1Protocol(protocolConfig, registryURLs);
+```
+
+看到这里就比较明白dubbo的工作原理了doExportUrlsFor1Protocol方法，先创建URL，URL创建出来长这样`dubbo://192.168.xx.63:20888/com.xxx.xxx.VehicleInfoService?anyhost=true&application=test-web&default.retries=0&dubbo=2.5.3&interface=com.xxx.xxx.VehicleInfoService&methods=get,save,update,del,list&pid=13168&revision=1.2.38&side=provider&timeout=5000&timestamp=1510829644847`，是不是觉得这个URL很眼熟，没错在注册中心看到的services的providers信息就是这个，再传入url通过proxyFactory获取Invoker，再将Invoker封装成Exporter的数组，只需要将这个list提供给网络传输层组件，然后consumer执行Invoker的invoke方法就行了。让我们再看看这个proxyFactory的getInvoker方法。proxyFactory下有JDKProxyFactory和JavassistProxyFactory。官方推荐也是默认使用的是JavassistProxyFactory。因为javassist动态代理性能比JDK的高。
+
+```java
+public interface Invoker<T> extends Node {
+
+    /**
+     * get service interface.
+     * 
+     * @return service interface.
+     */
+    Class<T> getInterface();
+
+    /**
+     * invoke.
+     * 
+     * @param invocation
+     * @return result
+     * @throws RpcException
+     */
+    Result invoke(Invocation invocation) throws RpcException;
+
+}
+```
+
+Invoker 的实现类（AbstractProxyInvoker）的invoke方法
+
+```java
+    public Result invoke(Invocation invocation) throws RpcException {
+        try {
+            return new RpcResult(doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments()));
+        } catch (InvocationTargetException e) {
+            return new RpcResult(e.getTargetException());
+        } catch (Throwable e) {
+            throw new RpcException("Failed to invoke remote proxy method " + invocation.getMethodName() + " to " + getUrl() + ", cause: " + e.getMessage(), e);
+        }
+    }
+```
+
+可以看到使用了动态代理的方式调用了要暴露的service的方法。并且返回了Invoker对象。在dubbo的服务发布中我们可以看到，这个Invoker贯穿始终，都可以看成是一个context的作用了
+
+
+
+
+
+- RPC框架的简易结构
+
+  服务消费方以本地调用的方式调用服务
+
+  client stub 接收到调用后负责将方法，参数等组装成能够进行网络传输的消息体
+
+  client stub 找到服务地址并将消息发送到服务端
+
+  server stub 收到消息后进行解码
+
+  server stub 根据解码的结果进行调用本地的服务
+
+  本地服务执行，并将结果返回给server stub
+
+  server stub 将返回结果进行打包成消息发送至消费方
+
+  client stub 接受到消息，并进行解码
+
+  服务消费方的到最终的结果
+
+- dubbo客户端的初始化
+
+- dubbo服务端的初始化
+
+- dubbo客户端处理请求的流程
+
+- dubbo服务端处理请求的流程

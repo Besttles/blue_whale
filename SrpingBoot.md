@@ -1,5 +1,209 @@
 # SrpingBoot
 
+## SpringBoot
+
+### 自动配置原理
+
+springboot 启动的时候加载主配置类，开启了自动配置功能`@EnableAutoConfigration`
+
+`@EnableAutoConfigration`给容器中导入组件
+
+- SpringFactoriesLoader/loadFactoryName()
+
+- 扫描jar包类路径下的。 MATA-INF/spring.factories
+- 把扫描到的文件的内容包装成properties文件
+- 从properties中获取到EnableAutoConfigration.class对应的值，然后把他们添加到容器中
+- 所有配置文件能配置的属性都在XXXProperties类中封装着
+- SpringBoot启动会加载大量的配置类
+
+将类路径下的 `MATA_INF/spring.factories` 里面配置的所有`EnableConfigration`的值加入到容器中
+
+```java
+@Configuration
+@EnableConfigurationProperties(HttpEncodingProperties.class)
+@ConditionalOnWebApplication
+@ConditionalOnClass(CharacterEncodingFilter.class)
+@ConditionalOnProperty(prefix = "spring.http.encoding", value = "enabled", matchIfMissing = true)
+public class HttpEncodingAutoConfiguration{
+    
+}
+```
+
+```java
+@ConfigurationProperties(prefix = "spring.http.encoding")
+public class HttpEncodingProperties {
+    
+}
+```
+
+
+
+`@Configration`  表示这是一个配置类，给容器中添加组件
+
+`@ConfigrationProperties` 从配置文件中获取指定的值和bean的属性绑定
+
+`@ConditionalOnWebApplication` Spring底层的@condition注解，如果满足条件，则配置类生效，判断当前应用是否为web应用，如果是web应用，则配置类生效
+
+`@ConditionOnProperties（XXXX.class）` 判断当前项目是不是有这个类
+
+**根据当前不同的条件判断，决定这个配置类是否生效**，一旦配置类生效，就会给容器添加各种组件
+
+`@bean` 给容器中添加一个组件
+
+**我们可以配置的属性都是来源于properties类！**
+
+我们可以使用debug模式来判断哪些自动配置类生效(打印自动匹配报告)
+
+```properties
+debug=true
+```
+
+
+
+
+
+### @Conditional派生注解
+
+作用：必须是@Conditional指定的条件成立，才给容器中添加组件，配置类中的内容才会生效
+
+```java
+@Target({ ElementType.TYPE, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Conditional(OnBeanCondition.class)
+public @interface ConditionalOnMissingBean {}
+```
+
+| @Conditional扩展注解            | 作用（判断是否满足当前指定条件）                 |
+| ------------------------------- | ------------------------------------------------ |
+| @ConditionalOnJava              | 系统的java版本是否符合要求                       |
+| @ConditionalOnBean              | 容器中存在指定Bean；                             |
+| @ConditionalOnMissingBean       | 容器中不存在指定Bean；                           |
+| @ConditionalOnExpression        | 满足SpEL表达式指定                               |
+| @ConditionalOnClass             | 系统中有指定的类                                 |
+| @ConditionalOnMissingClass      | 系统中没有指定的类                               |
+| @ConditionalOnSingleCandidate   | 容器中只有一个指定的Bean，或者这个Bean是首选Bean |
+| @ConditionalOnProperty          | 系统中指定的属性是否有指定的值                   |
+| @ConditionalOnResource          | 类路径下是否存在指定资源文件                     |
+| @ConditionalOnWebApplication    | 当前是web环境                                    |
+| @ConditionalOnNotWebApplication | 当前不是web环境                                  |
+| @ConditionalOnJndi              | JNDI存在指定项                                   |
+
+### WEB开发
+
+SpringBoot根据我们导入的场景进行自动配置，只需要添加少量的属性就可以运行起来
+
+SpringBoot对静态文件的映射规则
+
+```java
+@Override
+		public void addResourceHandlers(ResourceHandlerRegistry registry) {
+			if (!this.resourceProperties.isAddMappings()) {
+				logger.debug("Default resource handling disabled");
+				return;
+			}
+			Integer cachePeriod = this.resourceProperties.getCachePeriod();
+			if (!registry.hasMappingForPattern("/webjars/**")) {
+				customizeResourceHandlerRegistration(
+						registry.addResourceHandler("/webjars/**")
+								.addResourceLocations(
+										"classpath:/META-INF/resources/webjars/")
+						.setCachePeriod(cachePeriod));
+			}
+			String staticPathPattern = this.mvcProperties.getStaticPathPattern();
+			if (!registry.hasMappingForPattern(staticPathPattern)) {
+				customizeResourceHandlerRegistration(
+						registry.addResourceHandler(staticPathPattern)
+								.addResourceLocations(
+										this.resourceProperties.getStaticLocations())
+						.setCachePeriod(cachePeriod));
+			}
+		}
+```
+
+`webjars`  以jar包的形式引入静态文件，将jequery和js以maven依赖的形式进行导入
+
+www.webjars.org 
+
+在访问的时候只需要写访问资源的名称
+
+`/**` 访问当前项目的任何资源 （静态资源文件夹）
+
+```
+"classpath:/META-INF/resources/"
+"classpath:/resources/"  (在resources下面再建一个“resources”文件夹)
+"classpath:/static/"
+"classpath:/public"
+```
+
+```java
+@ConfigurationProperties(prefix = "spring.mvc")
+public class WebMvcProperties {
+    /**
+	 * Path pattern used for static resources.
+	 */
+	private String staticPathPattern = "/**";
+}
+```
+
+```java
+		@Bean  //配置欢迎页  index.html
+		public WelcomePageHandlerMapping welcomePageHandlerMapping(
+				ResourceProperties resourceProperties) {
+			return new WelcomePageHandlerMapping(resourceProperties.getWelcomePage());
+		}
+       
+        @Configuration
+		@ConditionalOnProperty(value = "spring.mvc.favicon.enabled", matchIfMissing = true)
+		public static class FaviconConfiguration {
+
+			private final ResourceProperties resourceProperties;
+
+			public FaviconConfiguration(ResourceProperties resourceProperties) {
+				this.resourceProperties = resourceProperties;
+			}
+
+			@Bean
+			public SimpleUrlHandlerMapping faviconHandlerMapping() {
+				SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
+				mapping.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
+				mapping.setUrlMap(Collections.singletonMap("**/favicon.ico",
+						faviconRequestHandler()));//配置图标
+				return mapping;
+			}
+
+```
+
+定义静态资源文件夹`spring.resources.static-location = /hello/,class path:/stuff/`
+
+自定义静态资源文件夹后，之前默认的都会失效！
+
+
+
+### 缓存
+
+JSR-107 和 SpringBoot缓存抽象
+
+从缓存中存取数据
+
+CatchManager 接口统一不同的缓存技术
+
+`CatchManager` 缓存管理器，管理各种缓存组件
+
+`Catch` 缓存接口，定义缓存操作，实现有：redisCatch，EhCatchCatch，ConcurrentMapCatch等
+
+`@Cacheable` 主要针对方法配置，能根据方法的请求参数对结果进行缓存
+
+`@CacheEvict` 清空缓存（当我们删除什么的时候，需要清空缓存）
+
+`@CachePut` 保证方法被调用，又希望结果被缓存（当我们更新一个数据的时候，可以执行方法并更新缓存）
+
+`@EnableCaching` 开启基于注解的缓存
+
+
+
+
+
 ## redis
 
 环境：redis 192.168.10.163:6379
@@ -8,7 +212,7 @@
 
 
 
-### 连接redis，配置yml文件
+### 连接redis，配置yaml文件
 
 ```yaml
 spring:

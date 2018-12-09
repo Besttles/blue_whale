@@ -202,13 +202,237 @@ CatchManager 接口统一不同的缓存技术
 
 
 
+### 全局异常
+
+[全局异常](https://www.jianshu.com/p/99ded527bc47)
+
+### 定制错误响应
+
+Springboot 默认的错误处理的自动配置类
+
+```java
+@Configuration
+@ConditionalOnWebApplication
+@ConditionalOnClass({ Servlet.class, DispatcherServlet.class })
+// Load before the main WebMvcAutoConfiguration so that the error View is available
+@AutoConfigureBefore(WebMvcAutoConfiguration.class)
+@EnableConfigurationProperties(ResourceProperties.class)
+public class ErrorMvcAutoConfiguration {}
+```
+
+添加的组件：
+
+```java
+	@Bean
+	@ConditionalOnMissingBean(value = ErrorAttributes.class, search = SearchStrategy.CURRENT)
+	public DefaultErrorAttributes errorAttributes() {
+		return new DefaultErrorAttributes();
+	}
+    /**
+    @Controller
+    @RequestMapping("${server.error.path:${error.path:/error}}")
+    public class BasicErrorController extends AbstractErrorController {
+    进行错误处理，如果没有配置error处理的controller，默认会去处理/error请求，
+    */
+	@Bean
+	@ConditionalOnMissingBean(value = ErrorController.class, search = SearchStrategy.CURRENT)
+	public BasicErrorController basicErrorController(ErrorAttributes errorAttributes) {
+		return new BasicErrorController(errorAttributes, this.serverProperties.getError(),
+				this.errorViewResolvers);
+	}
+    /**
+    当系统出现错误的时候，会转到/error请求
+    @Value("${error.path:/error}")
+	private String path = "/error";
+    */
+	@Bean
+	public ErrorPageCustomizer errorPageCustomizer() {
+		return new ErrorPageCustomizer(this.serverProperties);
+	}
+    //处理浏览器请求的到哪个页面
+	@Bean
+	@ConditionalOnBean(DispatcherServlet.class)
+	@ConditionalOnMissingBean
+	public DefaultErrorViewResolver conventionErrorViewResolver() {
+		return new DefaultErrorViewResolver(this.applicationContext,
+			this.resourceProperties);
+	}
+    //先去找error/404 的控制器，如果没有的话，就会去静态文件夹里去找error/404.html 的文件
+	private ModelAndView resolveResource(String viewName, Map<String, Object> model) {
+		for (String location : this.resourceProperties.getStaticLocations()) {
+			try {
+				Resource resource = this.applicationContext.getResource(location);
+				resource = resource.createRelative(viewName + ".html");
+				if (resource.exists()) {
+					return new ModelAndView(new HtmlResourceView(resource), model);
+				}
+			}
+			catch (Exception ex) {
+			}
+		}
+		return null;
+	}
+
+```
+
+basicErrorController方法在处理系统错误的时候，会有两种形式，一种是出现页面的形式，一种是返回json类型的数据
+
+怎么区分是浏览器请求还会其他请求，根据浏览器请求的请求头来识别请求中的**Accept：text/html**代表优先接收html类型的文件，如果是 
+
+```java
+Accept:*/*   //代表优先接受任意类型的文件
+```
+
+浏览器请求
+
+```java
+	//浏览器请求，返回错误的页面
+    @RequestMapping(produces = "text/html")
+	public ModelAndView errorHtml(HttpServletRequest request,
+			HttpServletResponse response) {
+		HttpStatus status = getStatus(request);
+		Map<String, Object> model = Collections.unmodifiableMap(getErrorAttributes(
+				request, isIncludeStackTrace(request, MediaType.TEXT_HTML)));
+		response.setStatus(status.value());
+		ModelAndView modelAndView = resolveErrorView(request, response, status, model);
+		return (modelAndView == null ? new ModelAndView("error", model) : modelAndView);
+	}
+    //处理请求的页面信息
+    protected ModelAndView resolveErrorView(HttpServletRequest request,
+			HttpServletResponse response, HttpStatus status, Map<String, Object> model) {
+		for (ErrorViewResolver resolver : this.errorViewResolvers) {
+			ModelAndView modelAndView = resolver.resolveErrorView(request, status, model);
+			if (modelAndView != null) {
+				return modelAndView;
+			}
+		}
+		return null;
+	}
+```
+
+请求返回的内容
+
+```java
+	 /*（需要在模版引擎中获取相应的数据，如果html文件是放在静态文件夹下的，就不能获取下面的值）
+	 DefaultErrorAttributes 定义了所有返回的内容
+	 status 状态码
+	 timestamp
+	 error
+	 exception
+	 message
+      */
+     private void addStatus(Map<String, Object> errorAttributes,
+			RequestAttributes requestAttributes) {
+		Integer status = getAttribute(requestAttributes,
+				"javax.servlet.error.status_code");
+		if (status == null) {
+			errorAttributes.put("status", 999);
+			errorAttributes.put("error", "None");
+			return;
+		}
+		errorAttributes.put("status", status);
+		try {
+			errorAttributes.put("error", HttpStatus.valueOf(status).getReasonPhrase());
+		}
+		catch (Exception ex) {
+			// Unable to obtain a reason
+			errorAttributes.put("error", "Http Status " + status);
+		}
+	}
+```
+
+
+
+定制错误页面，将错误码.html的文件放入静态文件夹
+
+```java
+    //所有以4，5开头的错误码，
+    static {
+		Map<Series, String> views = new HashMap<Series, String>();
+		views.put(Series.CLIENT_ERROR, "4xx");
+		views.put(Series.SERVER_ERROR, "5xx");
+		SERIES_VIEWS = Collections.unmodifiableMap(views);
+	}
+```
+
+
+
+其他客户端请求
+
+```java
+ //其他客户端，返回错误的json格式的数据
+	@RequestMapping
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> error(HttpServletRequest request) {
+		Map<String, Object> body = getErrorAttributes(request,
+				isIncludeStackTrace(request, MediaType.ALL));
+		HttpStatus status = getStatus(request);
+		return new ResponseEntity<Map<String, Object>>(body, status);
+	}
+```
+
+定制错误的json数据
+
+自定义异常处理器
+
+```java
+@ControllerAdvice
+public class MyExceptionHandler {
+    //浏览器和其他客户端都是json
+	@ExceptionHandler(OApiException.class)
+	public Map<String,String> handleException() {
+		Map<String,String> map = new HashMap<>();
+		map.put("code", "OPI");
+		return map;
+	}
+}
+    //转发到/errer请求进行处理,达到自适应效果
+	@ExceptionHandler(OApiException.class)
+	public String getErrorView(Exception e,HttpServletRequest request) {
+		Map<String,String> map = new HashMap<>();
+        //需要传入我们的错误码，不然的话会是200请求，不进行错误解析
+        request.setAttribute("javax.servlet.error.status_code", "404");
+        map.put("message", e.getMessage());
+		map.put("code", "OPI");
+		return "forward:/error";
+	}
+```
+
+自定义errorAttribute
+
+```java
+@Component
+public class MyErrorAttribute extends DefaultErrorAttributes{
+
+	
+	@Override
+	public Map<String, Object> getErrorAttributes(RequestAttributes requestAttributes,
+			boolean includeStackTrace) {
+           Map<String, Object> map = super.getErrorAttributes(requestAttributes, includeStackTrace);
+		map.put("message", "get it");
+        //可以获取在异常处理器中自适应的数据
+        //参数中的key 和 scope ，scope中request：0， session ：1
+        Map<String,Object> sta = (Map<String, Object>)        requestAttributes.getAttribute("ext", 0);
+           map.put("ext", sta);
+           return map;		
+	}
+	
+}
+```
+
+
+
+
+
 
 
 ## redis
 
 环境：redis 192.168.10.163:6379
 
-[Redis]: https://redisbook.readthedocs.io/en/latest/index.html
+[redis](https://redisbook.readthedocs.io/en/latest/index.html)
+
+
 
 
 
@@ -470,7 +694,7 @@ public class RegistryConfig extends AbstractConfig {
     }
 ```
 
-这个protocols长这个样子<dubbo:protocol name="dubbo" port="20888" id="dubbo" /> protocols也是根据配置装配出来的。接下来让我们进入doExportUrlsFor1Protocol方法看看dubbo具体是怎么样将服务暴露出去的。这个方法特别大，有将近300多行代码，但是其中大部分都是获取类似protocols的name、port、host和一些必要的上下文
+这个protocols长这个样子`<dubbo:protocol name="dubbo" port="20888" id="dubbo" /> protocols`也是根据配置装配出来的。接下来让我们进入doExportUrlsFor1Protocol方法看看dubbo具体是怎么样将服务暴露出去的。这个方法特别大，有将近300多行代码，但是其中大部分都是获取类似protocols的name、port、host和一些必要的上下文
 
 组装url的方法：
 
@@ -549,3 +773,26 @@ Invoker 的实现类（AbstractProxyInvoker）的invoke方法
 - dubbo客户端处理请求的流程
 
 - dubbo服务端处理请求的流程
+
+## Nginx
+
+[nginx资料](https://www.jianshu.com/p/bed000e1830b?utm_campaign=maleskine&utm_content=note&utm_medium=seo_notes&utm_source=recommendation)
+
+## Docker
+
+开源的应用容器容器引擎
+
+- 轻量级，快速
+
+  将软件编译好成为镜像
+
+docker主机：安装了docker程序的机器，安装于操作系统之上的
+
+docker客户端：客户端通过命令行或者图形化界面来使用docker
+
+docker仓库：用来保存各种打包好的镜像
+
+docker镜像：创建docker容器的镜像
+
+docker容器：镜像启动后的实例或一组应用
+

@@ -4,6 +4,8 @@
 
 ### 自动配置原理
 
+[笔记](https://blog.csdn.net/sdzhangshulong/article/details/81075579)
+
 springboot 启动的时候加载主配置类，开启了自动配置功能`@EnableAutoConfigration`
 
 `@EnableAutoConfigration`给容器中导入组件
@@ -419,6 +421,101 @@ public class MyErrorAttribute extends DefaultErrorAttributes{
 	
 }
 ```
+
+
+
+### 数据源
+
+#### 数据源自动配置
+
+```
+org.apache.tomcat.jdbc.pool.DataSource
+HikariDataSource
+org.apache.commons.dbcp.BasicDataSource
+org.apache.commons.dbcp2.BasicDataSource
+自定义数据源
+```
+
+
+
+### WEB MVC扩展
+
+使用WebMvcConfigrationAdaptor来扩展SpringMVC 的功能
+
+```java
+@Configuration
+public class MyMvcConfig extends WebMvcConfigurerAdapter{
+
+	@Override
+	public void addViewControllers(ViewControllerRegistry registry) {
+		//super.addViewControllers(registry);
+		registry.addViewController("/welcome").setViewName("welcome");
+	}
+}
+```
+
+既保留了自动配置的SpringMVC的自动配置，又可以手动配置资源的映射！
+
+**源码解析**：
+
+```java
+	@Configuration
+	@Import(EnableWebMvcConfiguration.class)
+	@EnableConfigurationProperties({ WebMvcProperties.class, ResourceProperties.class })
+	public static class WebMvcAutoConfigurationAdapter extends WebMvcConfigurerAdapter {
+
+```
+
+自动配置的SpringMvc也是继承的这个类来实现的！
+
+```java
+@Configuration
+	@Import(EnableWebMvcConfiguration.class)
+	@EnableConfigurationProperties({ WebMvcProperties.class, ResourceProperties.class })
+	public static class WebMvcAutoConfigurationAdapter extends WebMvcConfigurerAdapter {
+```
+
+做自动配置的时候会导入@Import(EnableWebMvcConfiguration.class)
+
+```java
+	/**
+	 * Configuration equivalent to {@code @EnableWebMvc}.
+	 */
+	@Configuration
+	public static class EnableWebMvcConfiguration extends DelegatingWebMvcConfiguration {
+
+```
+
+他继承的父类：**DelegatingWebMvcConfiguration**
+
+```java
+@Configuration
+public class DelegatingWebMvcConfiguration extends WebMvcConfigurationSupport {
+
+	private final WebMvcConfigurerComposite configurers = new WebMvcConfigurerComposite();
+
+    //从容器中获取所有的WebMvcConfigurer赋值到configurers中
+	@Autowired(required = false)//自动装配
+	public void setConfigurers(List<WebMvcConfigurer> configurers) {
+		if (!CollectionUtils.isEmpty(configurers)) {
+			this.configurers.addWebMvcConfigurers(configurers);
+		}
+	}
+    //实现的方法WebMvcConfigurer里所有的配置都会起作用，所以我们扩展的配置类也会起作用
+	@Override
+	public void addViewControllers(ViewControllerRegistry registry) {
+        //将所有的
+		for (WebMvcConfigurer delegate : this.delegates) {
+			delegate.addViewControllers(registry);
+		}
+	}
+```
+
+#### 全面接管SpringMVC
+
+在自动配置类上面添加**@EnableWebMvc**
+
+不启动Springmvc 的自动配置，全部执行手动配置，静态资源失效。
 
 
 

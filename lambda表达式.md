@@ -153,7 +153,7 @@ int five = ( (x, y) -> x + y ) (2, 3); // ERROR! try to call a lambda in-place1
 
 
 
-```
+```java
 //包围类的成员变量
 int tmp1 = 1; 
 //包围类的静态成员变量
@@ -193,7 +193,7 @@ Person::new       //构造器引用123
 
   下面是一组例子，教你使用方法引用代替λ表达式：
 
-```
+```java
 //c1 与 c2 是一样的（静态方法引用）
 Comparator<Integer> c2 = (x, y) -> Integer.compare(x, y);
 Comparator<Integer> c1 = Integer::compare;
@@ -210,7 +210,7 @@ strList.stream().map(Integer::new);123456789101112
 
   使用方法引用，你的程序会变得更短些。现在distinctPrimarySum方法可以改写如下：
 
-```
+```java
 public void distinctPrimarySum(String... numbers) {
     List<String> l = Arrays.asList(numbers);
     int sum = l.stream().map(Integer::new).filter(Primes::isPrime).distinct().sum();
@@ -229,7 +229,7 @@ String[]::new //引用一个数组的构造器12
 
 
 
-```
+```java
 public interface MyInterf {
     String m1();
     default String m2() {
@@ -242,7 +242,7 @@ public interface MyInterf {
   这么做的原因是：由于Collection库需要为批处理操作添加新的方法，如forEach()，stream()等，但是不能修改现有的Collection接口——如果那样做的话所有的实现类都要进行修改，包括很多客户自制的实现类。所以只好使用这种妥协的办法。 
   如此一来，我们就面临一种类似多继承的问题。如果类Sub继承了两个接口，Base1和Base2，而这两个接口恰好具有完全相同的两个默认方法，那么就会产生冲突。这时Sub类就必须通过重载来显式指明自己要使用哪一个接口的实现（或者提供自己的实现）：
 
-```
+```java
 public class Sub implements Base1, Base2 {
     public void hello() {
         Base1.super.hello(); //使用Base1的实现
@@ -252,7 +252,7 @@ public class Sub implements Base1, Base2 {
 
   除了默认方法，Java8的接口也可以有静态方法的实现：
 
-```
+```java
 public interface MyInterf {
     String m1();
     default String m2() {
@@ -270,8 +270,8 @@ public interface MyInterf {
 
 
 
-```
-Stream.generate(Math::random).limit(5).forEach(System.out::println);1
+```java
+Stream.generate(Math::random).limit(5).forEach(System.out::println);
 ```
 
   注意这个limit(5)，如果没有这个调用，那么这条语句会永远地执行下去。也就是说这个生成器是无穷的。这种调用叫做终结操作，或者短路（short-circuiting）操作。

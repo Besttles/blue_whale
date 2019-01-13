@@ -2,6 +2,8 @@
 
 ## SpringBoot
 
+[SpringBoot官方文档](https://docs.spring.io/spring/docs/5.1.4.RELEASE/spring-framework-reference/core.html#spring-core)  [SpringBoot测试](https://docs.spring.io/spring/docs/5.1.4.RELEASE/spring-framework-reference/testing.html#testing) [SpringMVC](https://docs.spring.io/spring/docs/5.1.4.RELEASE/spring-framework-reference/web.html#mvc-servlet) 
+
 ### 自动配置原理
 
 [笔记](https://blog.csdn.net/sdzhangshulong/article/details/81075579)
@@ -529,7 +531,7 @@ public class DelegatingWebMvcConfiguration extends WebMvcConfigurationSupport {
 
 [redis](https://redisbook.readthedocs.io/en/latest/index.html)
 
-
+[SpringBoot-redis官方文档](https://docs.spring.io/spring-data/data-redis/docs/current/reference/html/#redis:template)
 
 
 

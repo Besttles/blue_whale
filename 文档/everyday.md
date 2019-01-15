@@ -192,3 +192,376 @@ Spring中的AOP代理还是离不开Spring的IOC容器，代理的生成，管�
 (4)After:在目标方法完成之后做增强，无论目标方法时候成功完成。@After可以指定一个切入点表达式
 
 (5)Around:环绕通知,在目标方法完成前后做增强处理,环绕通知是最重要的通知类型,像事务,日志等都是环绕通知,注意编程中核心是一个ProceedingJoinPoint
+
+## Spring AOP 2
+
+AOP常用的实现方式有两种，**一种是采用声明的方式来实现（基于XML），一种是采用注解的方式来实现（基于AspectJ）**。
+
+首先复习下AOP中一些比较重要的概念：
+
+**Joinpoint（连接点）：**程序执行时的某个特定的点，在Spring中就是某一个方法的执行 。
+**Pointcut（切点）：**说的通俗点，spring中AOP的切点就是指一些方法的集合，而这些方法是需要被增强、被代理的。一般都是按照一定的约定规则来表示的，如正则表达式等。切点是由一类连接点组成。 
+**Advice（通知)：**还是说的通俗点，就是在指定切点上要干些什么。 
+**Advisor（通知器)：**其实就是切点和通知的结合 。
+
+**一、基于XML配置的Spring AOP**
+
+采用声明的方式实现（在XML文件中配置），大致步骤为：配置文件中配置pointcut, 在java中用编写实际的aspect 类, 针对对切入点进行相关的业务处理。
+
+业务接口：
+
+```java
+package com.spring.service;
+
+public interface IUserManagerService {
+    //查找用户
+    public String findUser();
+    
+    //添加用户
+    public void addUser();
+}
+```
+
+业务实现：
+
+```java
+package com.spring.service.impl;
+
+import com.spring.service.IUserManagerService;
+
+public class UserManagerServiceImpl implements IUserManagerService{
+    
+private String name;
+    
+    public void setName(String name){
+        this.name=name;
+    }
+    
+    public String getName(){
+        return this.name;
+    }
+    
+    public String findUser(){
+        System.out.println("============执行业务方法findUser,查找的用户是："+name+"=============");
+        return name;
+    }
+    
+    public void addUser(){
+        System.out.println("============执行业务方法addUser=============");
+        //throw new RuntimeException();
+    }
+}
+```
+
+切面类：
+
+```java
+package com.spring.aop;
+
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+
+public class AopAspect {
+    
+    /**
+     * 前置通知：目标方法调用之前执行的代码
+      * @param jp
+     */
+    public void doBefore(JoinPoint jp){
+        System.out.println("===========执行前置通知============");
+    }
+    
+    /**
+     * 后置返回通知：目标方法正常结束后执行的代码
+      * 返回通知是可以访问到目标方法的返回值的
+      * @param jp
+     * @param result
+     */
+    public void doAfterReturning(JoinPoint jp,String result){
+        System.out.println("===========执行后置通知============");
+        System.out.println("返回值result==================="+result);
+    }
+    
+    /**
+     * 最终通知：目标方法调用之后执行的代码（无论目标方法是否出现异常均执行）
+      * 因为方法可能会出现异常，所以不能返回方法的返回值
+      * @param jp
+     */
+    public void doAfter(JoinPoint jp){
+        System.out.println("===========执行最终通知============");
+    }
+    
+    /**
+     * 
+     * 异常通知：目标方法抛出异常时执行的代码
+      * 可以访问到异常对象
+      * @param jp
+     * @param ex
+     */
+    public void doAfterThrowing(JoinPoint jp,Exception ex){
+        System.out.println("===========执行异常通知============");
+    }
+    
+    /**
+     * 环绕通知：目标方法调用前后执行的代码，可以在方法调用前后完成自定义的行为。
+      * 包围一个连接点（join point）的通知。它会在切入点方法执行前执行同时方法结束也会执行对应的部分。
+      * 主要是调用proceed()方法来执行切入点方法，来作为环绕通知前后方法的分水岭。
+      * 
+     * 环绕通知类似于动态代理的全过程：ProceedingJoinPoint类型的参数可以决定是否执行目标方法。
+      * 而且环绕通知必须有返回值，返回值即为目标方法的返回值
+      * @param pjp
+     * @return
+     * @throws Throwable
+     */
+    public Object doAround(ProceedingJoinPoint pjp) throws Throwable{
+        System.out.println("======执行环绕通知开始=========");
+         // 调用方法的参数
+        Object[] args = pjp.getArgs();
+        // 调用的方法名
+        String method = pjp.getSignature().getName();
+        // 获取目标对象
+        Object target = pjp.getTarget();
+        // 执行完方法的返回值
+        // 调用proceed()方法，就会触发切入点方法执行
+        Object result=pjp.proceed();
+        System.out.println("输出,方法名：" + method + ";目标对象：" + target + ";返回值：" + result);
+        System.out.println("======执行环绕通知结束=========");
+        return result;
+    }
+}
+```
+
+Spring配置：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+    xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/tx 
+    http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+    http://www.springframework.org/schema/aop 
+    http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+    
+    <!-- 声明一个业务类 -->
+    <bean id="userManager" class="com.spring.service.impl.UserManagerServiceImpl">
+        <property name="name" value="lixiaoxi"></property>
+    </bean>  
+    
+     <!-- 声明通知类 -->
+    <bean id="aspectBean" class="com.spring.aop.AopAspect" />
+
+    <aop:config>
+     <aop:aspect ref="aspectBean">
+        <aop:pointcut id="pointcut" expression="execution(* com.spring.service.impl.UserManagerServiceImpl..*(..))"/>
+        
+        <aop:before method="doBefore" pointcut-ref="pointcut"/> 
+        <aop:after-returning method="doAfterReturning" pointcut-ref="pointcut" returning="result"/>
+        <aop:after method="doAfter" pointcut-ref="pointcut" /> 
+        <aop:around method="doAround" pointcut-ref="pointcut"/> 
+        <aop:after-throwing method="doAfterThrowing" pointcut-ref="pointcut" throwing="ex"/>
+      </aop:aspect>
+   </aop:config>
+</beans>
+```
+
+测试类：
+
+```java
+package com.spring.test;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+import com.spring.service.IUserManagerService;
+
+public class TestAop {
+
+    public static void main(String[] args) throws Exception{
+        
+        ApplicationContext act =  new ClassPathXmlApplicationContext("applicationContext3.xml");
+         IUserManagerService userManager = (IUserManagerService)act.getBean("userManager");
+         userManager.findUser();
+         System.out.println("\n");
+         userManager.addUser();
+    }
+}
+```
+
+ **二、使用注解配置AOP**
+
+采用注解来做aop, 主要是将写在spring 配置文件中的连接点写到注解里面。
+
+业务接口和业务实现与上边一样，具体切面类如下：
+
+![复制代码](https://common.cnblogs.com/images/copycode.gif)
+
+```java
+package com.spring.aop;
+
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.After;
+import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.AfterThrowing;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+
+@Aspect
+public class AopAspectJ {
+    
+    /**  
+     * 必须为final String类型的,注解里要使用的变量只能是静态常量类型的  
+     */  
+    public static final String EDP="execution(* com.spring.service.impl.UserManagerServiceImpl..*(..))";
+    
+    /**
+     * 切面的前置方法 即方法执行前拦截到的方法
+      * 在目标方法执行之前的通知
+      * @param jp
+     */
+    @Before(EDP)
+    public void doBefore(JoinPoint jp){
+        
+        System.out.println("=========执行前置通知==========");
+    }
+    
+    
+    /**
+     * 在方法正常执行通过之后执行的通知叫做返回通知
+      * 可以返回到方法的返回值 在注解后加入returning 
+     * @param jp
+     * @param result
+     */
+    @AfterReturning(value=EDP,returning="result")
+    public void doAfterReturning(JoinPoint jp,String result){
+        System.out.println("===========执行后置通知============");
+    }
+    
+    /**
+     * 最终通知：目标方法调用之后执行的通知（无论目标方法是否出现异常均执行）
+      * @param jp
+     */
+    @After(value=EDP)
+    public void doAfter(JoinPoint jp){
+        System.out.println("===========执行最终通知============");
+    }
+    
+    /**
+     * 环绕通知：目标方法调用前后执行的通知，可以在方法调用前后完成自定义的行为。
+      * @param pjp
+     * @return
+     * @throws Throwable
+     */
+    @Around(EDP)
+    public Object doAround(ProceedingJoinPoint pjp) throws Throwable{
+
+        System.out.println("======执行环绕通知开始=========");
+        // 调用方法的参数
+        Object[] args = pjp.getArgs();
+        // 调用的方法名
+        String method = pjp.getSignature().getName();
+        // 获取目标对象
+        Object target = pjp.getTarget();
+        // 执行完方法的返回值
+        // 调用proceed()方法，就会触发切入点方法执行
+        Object result=pjp.proceed();
+        System.out.println("输出,方法名：" + method + ";目标对象：" + target + ";返回值：" + result);
+        System.out.println("======执行环绕通知结束=========");
+        return result;
+    }
+    
+    /**
+     * 在目标方法非正常执行完成, 抛出异常的时候会走此方法
+      * @param jp
+     * @param ex
+     */
+    @AfterThrowing(value=EDP,throwing="ex")
+    public void doAfterThrowing(JoinPoint jp,Exception ex) {
+        System.out.println("===========执行异常通知============");
+    }
+}
+```
+
+![复制代码](https://common.cnblogs.com/images/copycode.gif)
+
+spring的配置:
+
+![复制代码](https://common.cnblogs.com/images/copycode.gif)
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+    xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/tx 
+    http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+    http://www.springframework.org/schema/aop 
+    http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+    
+    <!-- 声明spring对@AspectJ的支持 -->
+    <aop:aspectj-autoproxy/>    
+    
+    <!-- 声明一个业务类 -->
+    <bean id="userManager" class="com.spring.service.impl.UserManagerServiceImpl">
+        <property name="name" value="lixiaoxi"></property>
+    </bean>   
+    
+     <!-- 声明通知类 -->
+    <bean id="aspectBean" class="com.spring.aop.AopAspectJ" />
+
+</beans>
+```
+
+测试类：
+
+```java
+package com.spring.test;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+import com.spring.service.IUserManagerService;
+
+public class TestAop1 {
+    public static void main(String[] args) throws Exception{
+        
+        ApplicationContext act =  new ClassPathXmlApplicationContext("applicationContext4.xml");
+         IUserManagerService userManager = (IUserManagerService)act.getBean("userManager");
+         userManager.findUser();
+         System.out.println("\n");
+         userManager.addUser();
+    }
+}
+```
+
+测试结果与上面相同。
+
+**注意：**
+1.环绕方法通知，环绕方法通知要注意必须给出调用之后的返回值，否则被代理的方法会停止调用并返回null，除非你真的打算这么做。           
+2.只有环绕通知才可以使用JoinPoint的子类ProceedingJoinPoint，各连接点类型可以调用代理的方法，并获取、改变返回值。
+
+**补充：**
+1.<aop:pointcut>如果位于<aop:aspect>元素中，则命名切点只能被当前<aop:aspect>内定义的元素访问到，为了能被整个<aop:config>元素中定义的所有增强访问，则必须在<aop:config>下定义切点。
+2.如果在<aop:config>元素下直接定义<aop:pointcut>，必须保证<aop:pointcut>在<aop:aspect>之前定义。<aop:config>下还可以定义<aop:advisor>，三者在<aop:config>中的配置有先后顺序的要求：首先必须是<aop:pointcut>，然后是<aop:advisor>，最后是<aop:aspect>。而在<aop:aspect>中定义的<aop:pointcut>则没有先后顺序的要求，可以在任何位置定义。
+.<aop:pointcut>：用来定义切入点，该切入点可以重用；
+.<aop:advisor>：用来定义只有一个通知和一个切入点的切面；
+.<aop:aspect>：用来定义切面，该切面可以包含多个切入点和通知，而且标签内部的通知和切入点定义是无序的；和advisor的区别就在此，advisor只包含一个通知和一个切入点。
+3.在使用spring框架配置AOP的时候，不管是通过XML配置文件还是注解的方式都需要定义pointcut"切入点"
+例如定义切入点表达式 execution(* com.sample.service.impl..*.*(..))
+execution()是最常用的切点函数，其语法如下所示：
+整个表达式可以分为五个部分：
+(1)、execution(): 表达式主体。
+(2)、第一个*号：表示返回类型，*号表示所有的类型。
+(3)、包名：表示需要拦截的包名，后面的两个句点表示当前包和当前包的所有子包，com.sample.service.impl包、子孙包下所有类的方法。
+(4)、第二个*号：表示类名，*号表示所有的类。
+(5)、*(..):最后这个星号表示方法名，*号表示所有的方法，后面括弧里面表示方法的参数，两个句点表示任何参数。

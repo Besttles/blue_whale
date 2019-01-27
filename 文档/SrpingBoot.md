@@ -40,8 +40,6 @@ public class HttpEncodingProperties {
 }
 ```
 
-
-
 `@Configration`  表示这是一个配置类，给容器中添加组件
 
 `@ConfigrationProperties` 从配置文件中获取指定的值和bean的属性绑定
@@ -62,28 +60,11 @@ public class HttpEncodingProperties {
 debug=true
 ```
 
-### AOP源码
+### AOP
 
-AOP部分的解析器是由`AopNamespaceHandler` 注册，其init方法
+AOP功能主要是针对类和类的方法进行功能拓展，通过定义切面，切入点和通知类，对切面进行横向额功能拓展
 
-```java
-	@Override
-	public void init() {
-		// In 2.0 XSD as well as in 2.1 XSD.
-		registerBeanDefinitionParser("config", new ConfigBeanDefinitionParser());
-		registerBeanDefinitionParser("aspectj-autoproxy", new AspectJAutoProxyBeanDefinitionParser());
-		registerBeanDefinitionDecorator("scoped-proxy", new ScopedProxyBeanDefinitionDecorator());
-
-		// Only in 2.0 XSD: moved to context namespace as of 2.1
-		registerBeanDefinitionParser("spring-configured", new SpringConfiguredBeanDefinitionParser());
-	}
-```
-
-
-
-
-
-
+例如：Spring的事务管理，AOP实现的读写分离
 
 
 
@@ -671,7 +652,9 @@ Background saving started
 
 [AOF持久化]: https://redisbook.readthedocs.io/en/latest/internal/aof.html
 
+#### redis相关问题
 
+[redis的性能问题](http://www.linkedkeeper.com/37.html)
 
 
 
@@ -683,7 +666,7 @@ ubuntu系统安装mysql，注意版本，5.7之后的版本在设置外部访问
 
 简介：
 
-[常规数据库连接池原理]: https://mp.weixin.qq.com/s/tLysIX9KChNioJ-fMMimxw
+[常规数据库连接池原理](https://mp.weixin.qq.com/s/tLysIX9KChNioJ-fMMimxw)
 
 #### sql 优化
 

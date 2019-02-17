@@ -1,4 +1,4 @@
-# FolkJoin Framework
+# ForkJoin Framework
 
 在通常情况下，java1中我们实现一个简单的java，concurrent应用，我们实现了Runnable接口创建了线程类，然后创建相同的线程对象，我们控制了线程的创建，执行！
 
@@ -18,6 +18,414 @@
 
 框架主要基于以下两步操作：
 
-1.Folk：将任务分割成若干小任务并使用该框架执行
+1.fork：将任务分割成若干小任务并使用该框架执行
 
-2.Join：等待所有的任务执行结束
+2.Join：等待所有的任务执行结束                  
+
+*线程可以充分利用执行的时间，因此可以改善应用的执行效率*
+
+   forkJoin的执行主要使用下面的两个类：
+
+- forkJoinPool： 实现于ExecutorService接口，用于管理工人线程的信息和执行！
+- forkJoinTask： 一个基类执行在forkJoinPool，提供机制来执行fork（）和join（）在一个任务里，来控制任务的状态，实现两个类，RecurviceAction用于没有返回值，RecurviceTask用于有返回值的任务！​                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+
+## RecursiveAction 
+
+### 目标：
+
+- 创建一个forkJoinPool 对象来执行任务
+
+- 创建一个forkJoinTask 对象在forkJoinPool里面执行
+
+### 具体实现的方式：
+
+1. 使用默认的构造方法来创建forkJoinPool
+
+2. 在任务中，你可以使用算法来选择是否将任务拆分
+
+3. 你会使用加锁的方式来执行任务，当一个任务被分割成两个或者是多个子任务，子任务会等待任务全部结束
+
+4. 任务不会反悔任何结果，所以你要去使用基于RecursiveAction来实现
+
+   **创建物品类**
+
+```java
+public class Product {
+	private String name;
+	private double price;
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public double getPrice() {
+		return price;
+	}
+	public void setPrice(double price) {
+		this.price = price;
+	}
+}
+```
+
+创建多个物品
+
+```java
+	public class ProductListGenerator {
+
+	public List<Product> generator(int size){
+		List<Product> ret = new ArrayList<Product>();
+	    for(int i=0 ; i<size ; i++) {
+	    	Product product = new Product();
+	    	product.setName("product"+i);
+	    	product.setPrice(10);
+	    	ret.add(product);
+	    }
+	    return ret;
+	}
+}
+```
+
+创建任务类并测试结果
+
+```java
+public class Task extends RecursiveAction {
+	private static final long serialVersionUID = 1L;
+	private List<Product> products;
+	private int first;
+	private int last;
+	private double increment;
+
+	public Task(List<Product> products, int first, int last, double increment) {
+		super();
+		this.products = products;
+		this.first = first;
+		this.last = last;
+		this.increment = increment;
+	}
+
+	@Override
+	protected void compute() {
+		if(last - first<10) {
+			updatePrices();
+		}else {
+			int middle = (last + first)/2;
+			System.out.printf("task:pading task %s\n", getQueuedTaskCount());
+			Task t1 = new Task(products,first,middle,increment);
+			Task t2 = new Task(products,middle+1,last,increment);
+			invokeAll(t1,t2);
+		}
+	}
+
+	private void updatePrices() {
+		for(int i = first; i<last;i++) {
+			Product product = products.get(i);
+			product.setPrice(product.getPrice()*(1+increment));
+		}
+	}
+	
+	public static void main(String[] args) {
+		ProductListGenerator generator = new ProductListGenerator();
+		List<Product> products = generator.generator(10000);
+		Task task = new Task(products, 0, products.size(), 0.2);
+		ForkJoinPool forkJoinPool = new ForkJoinPool();
+		forkJoinPool.execute(task);
+		do {
+			System.out.printf("mainThread: ThreadCount: %d \n", forkJoinPool.getActiveThreadCount());
+			System.out.printf("main:stealCount: %d \n",forkJoinPool.getStealCount());
+			System.out.printf("mian:parallesime:%d \n", forkJoinPool.getParallelism());
+			try {
+				TimeUnit.MILLISECONDS.sleep(5);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} while (!task.isDone());
+		
+		forkJoinPool.shutdown();
+		
+		if(task.isCompletedNormally()) {
+			System.out.println("the task is completlly normal");
+		}
+		for(int i = 0;i<products.size();i++) {
+			Product product = products.get(i);
+			if(product.getPrice() != 12) {
+				//System.out.printf("product : %s %f \n",product.getName(),product.getPrice());
+			}
+		}
+		System.out.println("the end of the task!");
+	}
+}
+
+```
+
+结果：
+
+```
+task:pading task 0
+task:pading task 2
+task:pading task 0
+task:pading task 1
+task:pading task 1
+task:pading task 0
+task:pading task 1
+task:pading task 0
+task:pading task 1
+task:pading task 0
+the task is completlly normal
+the end of the task!
+```
+
+### 怎么实现的？
+
+在上面的例子中，你创建了ForkJoinPool和任务类在池中执行，你是用的是ForkJoinPool的默认构造器，所以将会使用默认的配置！创建的线程池的数量是基于你电脑中processor的数量，当任务池创建完成，那么这些线程就已经创建完成，并等待任务的执行@
+
+你使用的是继承RecursiveAction类，所以没有返回结果。你使用你创建的构造器去创建任务对象，当我们必须去更新超过10个物品的时候，将所有的元素分割成两部分，并创建两个任务，我们用两个子任务去执行任务，用的是一个物品类集合**$List<Product> products = generator.generator(10000);$** 而不需要创建两个集合！
+
+你可以使用$invokeAll()$ 去执行，这是个同步的调用，任务将会等待所有子任务执行完成，当任务正在等待他的子任务，那么workThread会去执行它锁等待的子任务， 通过这种方式，Fork/Join FrameWork比Runnable和Callable更加高效！
+
+任务执行时的主线程时同步（asynchronous）执行的,你可以使用ForkJoinPool的方法去检查任务执行的状态！
+
+即使ForkJoinPool类是用于执行ForkJoinTaskTask，你也可以执行Runnable和Callable对象，你或许也可以使用adapt()方法去接收一个Runnable或是callable对象，返回一个ForkJoinTask去执行任务！
+
+## RecursiveTask
+
+### 目标：
+
+任务执行返回结果！使用继承ForkJoinTask类和实现Executor框架的Future接口！
+
+如果你需要去执行比预定规模要大任务，就可以把任务分成多个子任务，并使用Fork/Join框架去，当它们执行完成，原来的任务包含每个子任务的执行结果，分组，然后返回最终结果，当任务执行结束，整个任务的执行结果就已经返回了！
+
+### 具体实现的方式:
+
+定义document类
+
+```java
+public class Document {
+
+	private String words[] = {"the","hello","goodbay","packet","java","thread","pool","random","class","main"};
+	public String [][] generateDocument(int numlines,int numWords,String word){
+		
+		int counter = 0;
+		String document[][] = new String [numlines][numWords];
+		Random random = new Random();
+		
+		for (int i = 0; i < numlines; i++) {
+			for(int j=0;j<numWords;j++) {
+				int index = random.nextInt(words.length);
+				document[i][j] = words[index];
+				if(document[i][j].equals(word)) {
+					counter++;
+				}
+				
+			}
+		}
+		System.out.printf("documentMock: the wprd appends %d times in the document \n",counter);
+		return document;
+	}
+}
+
+```
+
+定义DocumentTask
+
+```java
+public class DocumentTask extends RecursiveTask<Integer>{
+
+	private String[][] document;
+	private int start,end;
+	private String word;
+	
+	public DocumentTask(String[][] document, int start, int end, String word) {
+		super();
+		this.document = document;
+		this.start = start;
+		this.end = end;
+		this.word = word;
+	}
+
+	@Override
+	protected Integer compute() {
+		int result = 0;
+		if(end - start < 10) {
+			result = processWord(document,start,end,word);
+		}else {
+			int mid = (start+end)/2;
+			DocumentTask task1 = new DocumentTask(document, start, mid, word);
+			DocumentTask task2 = new DocumentTask(document, mid, end, word);
+			invokeAll(task1,task2);
+			try {
+				result = groupResults(task1.get(),task2.get());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return result;
+	}
+	private Integer groupResults(Integer integer, Integer integer2) {
+		Integer result = 0;
+      	result = integer + integer2;
+      	return result;
+	}
+	private int processWord(String[][] document, int start, int end, String word) {
+
+		List<LineTask> tasks = new ArrayList<LineTask>();
+		for(int i=start;i<end;i++) {
+			LineTask task = new LineTask(document[i],0,document[i].length,word);
+			tasks.add(task);
+			invokeAll(tasks);
+		}
+		int result = 0;
+		for (int i = 0; i < tasks.size(); i++) {
+			LineTask lineTask = tasks.get(i);
+			try {
+				result += lineTask.get();
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+		}		
+		return result;
+	}
+}
+```
+
+定义真正在执行比较字符串的lineTask
+
+```java
+public class LineTask extends RecursiveTask<Integer>{
+
+	private static final long serialVersionUID = 1L;
+
+	private String line[];
+	private int start,end;
+	private String word;
+	
+	
+	public LineTask(String[] line, int start, int end, String word) {
+		super();
+		this.line = line;
+		this.start = start;
+		this.end = end;
+		this.word = word;
+	}
+
+
+	@Override
+	protected Integer compute() {
+		int result = 0;
+		if(end - start < 100) {
+			result = count(line,start,end,word);
+		}else {
+			int mid = (start+end)/2;
+			LineTask task1 = new LineTask(line, start, mid, word);
+			LineTask task2 = new LineTask(line, mid, end, word);
+			invokeAll(task1,task2);
+			try {
+				result = groupResults(task1.get(),task2.get());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return result;
+	}
+
+
+	private int groupResults(Integer integer, Integer integer2) {
+		Integer result = 0;
+      	result = integer + integer2;
+      	return result;
+	}
+
+
+	private int count(String[] line2, int start2, int end2, String word2) {
+		
+		int counter = 0;
+		for(int i=start;i<end;i++) {
+			if(line[i].equals(word2)) {
+				counter++;
+			}
+		}
+		try {
+			//Thread.sleep(10);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+  		return counter;
+	}
+
+	public static void main(String[] args) throws InterruptedException, ExecutionException {
+		Date d = new Date();
+		Document mock = new Document();
+		String [][] document = mock.generateDocument(1000, 10000, "the");
+		DocumentTask task = new DocumentTask(document, 0, 1000, "the");
+		
+		ForkJoinPool pool = new ForkJoinPool();
+		pool.execute(task);
+		Date d1 = new Date();
+		long time1 = d1.getTime();
+		long time = d.getTime();
+		System.out.println("所需时间"+(time1-time)+"+++"+(task.get()));
+//		do {
+//			System.out.println("====================");
+//			System.out.println("Main : parallelism %d \n"+pool.getParallelism());
+//			System.out.println("Main : ActiveThreads %d \n"+pool.getActiveThreadCount());
+//			System.out.println("Main : getStealCount %d \n"+ pool.getStealCount());
+//			System.out.println("====================");
+//		} while (!task.isDone());
+		pool.shutdown();
+		try {
+			pool.awaitTermination(1, TimeUnit.DAYS);
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		try {
+			System.out.printf("Main : The word appears %s in the document" , task.get());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+```
+
+对比效率的方法
+
+```java
+public class Main {
+
+	public static void main(String[] args) {
+		Date d = new Date();
+		Document mock = new Document();
+		String [][] document = mock.generateDocument(1000, 10000, "the");
+		
+		int counter = 0;
+		for (int i = 0; i < 1000; i++) {
+			for(int j=0;j<10000;j++) {
+				if(document[i][j].equals("the")) {
+					counter++;
+				}
+			}
+		}
+		System.out.printf("documentMock: the wprd appends %d times in the document \n",counter);
+		Date d1 = new Date();
+		long time1 = d1.getTime();
+		long time = d.getTime();
+		System.out.println("所需时间"+(time1-time));
+	}
+}
+```
+
+结果
+
+```
+documentMock: the wprd appends 1001737 times in the document 
+所需时间231+++1001737
+Main : The word appears 1001737 in the document
+```
+
+### 怎么实现的？
+
+DocumentTask：当传入的 $end-start>100​$ ,就会把任务分割成两部分，这两部分使用递归的方式来继续判断使用哪种方式继续执行！
+
+LineTask：$end-start>10$ 就会将任务分割成两部分，使用递归来实现！
+
+当所有的任务执行完成，那么我们就可以使用$result.get()$ 来获取返回值！
+

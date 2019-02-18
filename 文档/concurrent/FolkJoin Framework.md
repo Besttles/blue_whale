@@ -429,3 +429,89 @@ LineTask：$end-start>10$ 就会将任务分割成两部分，使用递归来实
 
 当所有的任务执行完成，那么我们就可以使用$result.get()$ 来获取返回值！
 
+### 异步地执行任务
+
+当在线程池中执行任务的时候，我们是以同步的方式，知道任务返回结果的时候，程序才继续执行。但是我们也可以使用异步的方式去执行程序。当你使用异步的方式去执行任务，在任务执行的方法不会在任务执行完成后才会去返回结果，而是在任务会立刻返回结果，所以程序还可以继续执行
+
+#### 具体的实现方式
+
+```java
+public class FolderProcessor extends RecursiveTask<List<String>>{
+	private static final long serialVersionUID = 1L;
+	private String path;
+	private String extension;
+	public FolderProcessor(String path, String extension) {
+		super();
+		this.path = path;
+		this.extension = extension;
+	}
+	@Override
+	protected List<String> compute() {
+		List<String> list = new ArrayList<String>();
+		List<FolderProcessor> tasks = new ArrayList<>();
+		File file = new File(path);
+		File[] contends = file.listFiles();
+		if(contends != null) {
+			for (int i = 0; i < contends.length; i++) {
+				if(contends[i].isDirectory()) {
+					FolderProcessor task = new FolderProcessor(contends[i].getAbsolutePath(), extension);
+					task.fork();
+					tasks.add(task);
+					
+				}else {
+					if(checkFile(contends[i].getName())) {
+						list.add(contends[i].getAbsolutePath());
+						System.out.println(contends[i].getAbsolutePath());
+					}
+				}
+			}
+			if(tasks.size() > 50) {
+				System.out.println("task"+tasks.size()+"run");
+			}
+			addResultFromTask(list,tasks);
+		}
+		return list;
+	}
+	private boolean checkFile(String name) {
+		return name.endsWith(extension);
+	}
+	private void addResultFromTask(List<String> list, List<FolderProcessor> tasks) {
+		for (FolderProcessor folderProcessor : tasks) {
+			list.addAll(folderProcessor.join());
+		}
+	}
+	public static void main(String[] args) {
+	    ForkJoinPool pool = new ForkJoinPool();
+	    FolderProcessor system = new FolderProcessor("/Users/biwh/Desktop/blue_whale", "md");
+	    FolderProcessor apps = new FolderProcessor("/Users/biwh/Desktop/blue_whale/文档", "md");
+	    FolderProcessor document = new FolderProcessor("/Users/biwh/Desktop/blue_whale/文档/concurrent", "md");
+	    pool.execute(system);
+	    pool.execute(apps);
+	    pool.execute(document);
+	    do {
+	    	System.out.println("++++++++++++++++++++++++++");
+			System.out.println("Main:paralleism:"+pool.getParallelism());
+			System.out.println("Main:ActiveCount"+pool.getActiveThreadCount());
+			System.out.println("Main:steal count"+pool.getStealCount());
+			System.out.println("++++++++++++++++++++++++++");
+		    try {
+				TimeUnit.SECONDS.sleep(1);
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+	    } while ((!system.isDone())||(!apps.isDone())||(!document.isDone()));
+	    pool.shutdown();
+	    List<String> result;
+	    result = system.join();
+	    System.out.println("System size" + result.size());
+	    result = apps.join();
+	    System.out.println("System size" + result.size());
+	    result = document.join();
+	    System.out.println("System size" + result.size()); 
+	}
+}
+```
+
+#### 怎么实现的
+
+这个例子可以对路径下的文件进行扫描，使用异步方式去执行任务，每一个任务都会去扫描一个路径，你知道的，扫描的文件只有两种方式：文件，或是文件夹，当扫描到文件夹的时候，我们会新创建一个task去执行，使用folk方法！

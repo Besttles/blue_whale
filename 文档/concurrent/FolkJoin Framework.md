@@ -512,6 +512,139 @@ public class FolderProcessor extends RecursiveTask<List<String>>{
 }
 ```
 
+结果：
+
+```
+/Users/biwh/Desktop/blue_whale/文档/Spring源码/spring-boot.md
+/Users/biwh/Desktop/blue_whale/文档/Spring源码/spring-aop.md
+/Users/biwh/Desktop/blue_whale/文档/Spring源码/spring-task.md
+/Users/biwh/Desktop/blue_whale/文档/Spring源码/spring-transaction.md
+/Users/biwh/Desktop/blue_whale/文档/Spring源码/spring-context.md
+/Users/biwh/Desktop/blue_whale/文档/Spring源码/spring-mvc.md
+task170run
+/Users/biwh/Desktop/blue_whale/文档/有趣的文章/redis集锦/Redis持久性.md
+System size21
+System size20
+System size3
+
+```
+
+
+
 #### 怎么实现的
 
 这个例子可以对路径下的文件进行扫描，使用异步方式去执行任务，每一个任务都会去扫描一个路径，你知道的，扫描的文件只有两种方式：文件，或是文件夹，当扫描到文件夹的时候，我们会新创建一个task去执行，使用folk方法！
+
+直到任务遍历了全部的目录，它会等待所有的任务使用jion() 方法去返回结果，这个方法在任务执行完成后会进行调用，并将所有的compute()方法返回的结果使用一个list集合来存储！
+
+ForkJoinPool同样也可以使用同步的额方式执行，你是用execute()方法去执行已经创建好的任务，在调用程序中，你同样也是用shotdown()方法，和获取执行的状态！
+
+### get()与join()的区别
+
+**get()：**方法可以返回compute()方法执行完后的结果，或者等待直到任务完成
+
+**get(long TIMEOUT,TimeUtil util)：**这个方法可以设置等待结果的时间，在时间到达后仍为返回结果，则返回null
+
+join()：不可以被打断，如果你打断了join()方法的执行，会抛出InterruptorException
+
+当get() 方法被打断，会抛出ExecutionException，如果程序中抛出了UncheckException，那么join()方法会抛出RuntimeException
+
+### 在任务执行时抛出异常
+
+checkedException：检查时异常
+
+UncheckException：非检查时异常
+
+#### 示例
+
+```java
+public class Task extends RecursiveTask<Integer>{
+
+	private static final long serialVersionUID = 1L;
+	private int array[];
+	private int start,end;
+	public Task(int[] array, int start, int end) {
+		super();
+		this.array = array;
+		this.start = start;
+		this.end = end;
+	}
+	@Override
+	protected Integer compute() {
+		
+		System.out.println("the task is start");
+		
+		if(end-start < 10) {
+			if((3>start) && (3<end)) {
+				throw new RuntimeException("the task throw "+start+"to"+end);
+			}
+			try {
+				TimeUnit.SECONDS.sleep(1);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}else {
+			int mid = (end+start) /2;
+			Task t1 = new Task(array, start, mid);
+			Task t2 = new Task(array, mid, end);
+			invokeAll(t1,t2);
+		}
+		System.out.println("the task to the end");
+		return 0;
+	}
+}
+
+```
+
+调用方法：
+
+```java
+public class Main {
+	public static void main(String[] args) {
+		int array[] = new int[100];
+
+		Task t = new Task(array, 0, 100);
+
+		ForkJoinPool pool = new ForkJoinPool();
+
+		pool.execute(t);
+
+		pool.shutdown();
+
+		try {
+			pool.awaitTermination(1, TimeUnit.DAYS);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		if (t.isCompletedNormally()) {
+			System.out.println(t.getException());
+		}
+		System.out.println(t.join());
+	}
+}
+
+```
+
+结果：
+
+```yaml
+the task is start
+the task to the end
+Exception in thread "main" the task to the end
+the task to the end
+the task to the end
+the task to the end
+the task to the end
+the task to the end
+the task to the end
+the task to the end
+the task to the end
+java.lang.RuntimeException: java.lang.RuntimeException: the task throw 0to6
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)
+	at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+	at java.lang.reflect.Constructor.newInstance(Constructor.java:423)	
+```
+
+这个是在join等待输出的时候，抛出异常，程序停止执行！

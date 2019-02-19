@@ -648,3 +648,5 @@ java.lang.RuntimeException: java.lang.RuntimeException: the task throw 0to6
 ```
 
 这个是在join等待输出的时候，抛出异常，程序停止执行！
+
+## 取消任务

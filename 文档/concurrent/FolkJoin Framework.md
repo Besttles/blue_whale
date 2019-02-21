@@ -650,3 +650,10 @@ java.lang.RuntimeException: java.lang.RuntimeException: the task throw 0to6
 这个是在join等待输出的时候，抛出异常，程序停止执行！
 
 ## 取消任务
+
+当你在forkJoinPool中执行ForkJoinTask对象时，你可以取消他们在他们执行之前，为了这个目的提供了cancel（）方法，当你想要取消一个任务，你需要遵循以下的原则：
+
+1.当任务执行的时候，ForkJoinTask不提供任何方法去取消任务！
+
+### 怎么实现取消任务：
+

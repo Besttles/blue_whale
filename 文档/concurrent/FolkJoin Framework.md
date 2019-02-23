@@ -657,3 +657,150 @@ java.lang.RuntimeException: java.lang.RuntimeException: the task throw 0to6
 
 ### 怎么实现取消任务：
 
+定义数据生产方法
+
+```java
+public class ArrayGeneration {
+
+	public int [] generationArray(int size) {
+		int [] array = new int[size];
+		Random random = new Random();
+		for (int i = 0; i < size; i++) {
+			array[i] = random.nextInt(10);
+		}
+		return array;
+	}
+}
+
+```
+
+定义任务管理类
+
+```java
+public class TaskManager {
+
+	private List<ForkJoinTask<Integer>> tasks;
+
+	public TaskManager(List<ForkJoinTask<Integer>> tasks) {
+		super();
+		this.tasks = tasks;
+	}
+	
+	public TaskManager() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public void addTask(ForkJoinTask<Integer> task) {
+		tasks.add(task);
+	}
+	
+	public void cancleTasks(ForkJoinTask<Integer> cancleTask) {
+		for (ForkJoinTask<Integer> forkJoinTask : tasks) {
+			if(forkJoinTask != cancleTask) {
+				forkJoinTask.cancel(true);
+				((SearchNumberTask)forkJoinTask).writeCancelMessge();
+			}
+		}
+	}
+}
+
+```
+
+定义任务执行类
+
+```java
+public class SearchNumberTask extends RecursiveTask<Integer>{
+
+	private int numbers[];
+	private int start , end;
+	private int number;
+	private TaskManager manager;
+	private final static int NOT_FOUND = -1;
+	
+	
+	
+	public SearchNumberTask(int[] numbers, int start, int end, int number, TaskManager manager) {
+		super();
+		this.numbers = numbers;
+		this.start = start;
+		this.end = end;
+		this.number = number;
+		this.manager = manager;
+	}
+
+
+
+	@Override
+	protected Integer compute() {
+		System.out.println("Task:"+start+"to"+end);
+		int ret = 0;
+		if(end-start>10) {
+			ret = latchTask();
+		}else {
+			ret = lookForNum();
+		}
+		return ret;
+	}
+	private int lookForNum() {
+		for(int i=start; i<end;i++) {
+			if(numbers[i] == number) {
+				manager.cancleTasks(this);
+			}
+			return i;
+		}
+		try {
+			TimeUnit.SECONDS.sleep(1);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return NOT_FOUND;
+	}
+	private int latchTask() {
+		int middle = (start+end)/2;
+		SearchNumberTask task1 = new SearchNumberTask(numbers, start, middle, number, manager);
+		SearchNumberTask task2 = new SearchNumberTask(numbers, middle, end, number, manager);
+		//添加任务到任务列表中
+		manager.addTask(task1);
+		manager.addTask(task2);
+		//执行任务
+		task1.fork();
+		task2.fork();
+		int returnValue;
+		returnValue = task1.join();
+		if(returnValue == -1) {
+			return returnValue;
+		}
+		
+		returnValue = task2.join();
+		return returnValue;
+	}
+	public void writeCancelMessge() {
+		System.out.println("Task cancel from :=="+start+"==TO=="+end);
+	}
+}
+```
+
+测试类
+
+```java
+public class Main {
+	public static void main(String[] args) {
+		ArrayGeneration generator = new ArrayGeneration();
+		int array[] = generator.generationArray(1000);
+		List<ForkJoinTask<Integer>> tasks = new ArrayList<ForkJoinTask<Integer>>();
+		TaskManager task = new TaskManager(tasks);
+		ForkJoinPool pool = new ForkJoinPool();
+		SearchNumberTask search = new SearchNumberTask(array, 0, 1000, 5, task);
+		pool.execute(search);
+		pool.shutdown();
+		try {
+			pool.awaitTermination(1, TimeUnit.DAYS);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		System.out.println("the task is finashed");
+	}
+}
+
+```
+

@@ -15,12 +15,6 @@
   Supplier<T>
   不接受参数，返回一个T类型的结果
 
----------------------
-作者：漠风- 
-来源：CSDN 
-原文：https://blog.csdn.net/qq_36372507/article/details/78757811 
-版权声明：本文为博主原创文章，转载请附上博文链接！Functional interface
-
 lambda表达式只能用于functionInterface的环境中
 
 ```java
@@ -165,7 +159,7 @@ public interface IntPredicate {
 
 练习：
 
-![](/Users/biwh/Desktop/blue_whale/assets/IMG_100F28BCBEC9-1.jpeg)
+![](https://github.com/Besttles/blue_whale/blob/master/assets/IMG_100F28BCBEC9-1.jpeg)
 
 
 
@@ -175,7 +169,7 @@ public interface IntPredicate {
 
 例子：
 
-![](/Users/biwh/Desktop/blue_whale/assets/IMG_0255.PNG)
+![](https://github.com/Besttles/blue_whale/blob/master/assets/IMG_0255.PNG)
 
 ```java
 		Function<BufferedReader,String> f= (BufferedReader br) ->{

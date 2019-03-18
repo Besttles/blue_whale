@@ -163,7 +163,7 @@ public interface IntPredicate {
 
 
 
-## Lambda Exception
+### Lambda Exception
 
 记住这一点，所有的lambda表达式都不允许抛出任何检查时异常，如果你需要使用lambda表达式来抛出异常，你可以自己定义functional interface 来抛出异常，或者使用try catch 语句！
 
@@ -182,3 +182,115 @@ public interface IntPredicate {
 ```
 
 我们在Functional interface中来声明异常！
+
+### Type checking
+
+lambda表达式的类型是从上下文中推理出来的！下面的例子看我们在使用lambda表达式的时候都发生了什么？
+$$
+Filter(inventory,(Apple a)->a.getWeight>50);
+$$
+在lambda表达式的定义中，我们需要怎么去使用？
+$$
+Filter(LIst<apple> inventory,predicate<apple> p ;)
+$$
+我们需要的target Type 就是这个 `predicate<apple> p` (T is bound to apple)!!
+
+那么在predicate<T> 中，他的方法是什么呢？
+$$
+boolean test (apple a)
+$$
+那么我们在lambda表达式中怎么去返回一个boolean类型的值呢？
+
+```
+Apple -> boolean
+```
+
+Type-checking 的解析过程：
+
+1. 检查filter方法的定义
+2. filter方法需要一个正式的predicate类型的参数 Predicate<Apple>  target type
+3. Predicate<apple> 是一个functional interface，定义了一个抽象方法 test()
+4. Test() 方法描述了一个接收一个Apple类型的参数，返回了一个Boolean类型的返回值
+5. 任何实际的内容对于Filter都需要去匹配请求的方法。   `Apple -> boolean`
+
+### 同样的lambda表达式，不同的functional interface
+
+同一个lambda表达式，如果有自己的抽象方法就可以关联不同的functional interface！
+
+```java
+Callable<Integer> = () -> 42;
+PrivaledgeAction<Integer> () -> 42;
+```
+
+这就很像我们经常看到的Java中的多态，同样的方法，我们可以去定义不同的实现！
+
+空实现无返回值的抽象方法
+
+```java
+//predicate has a bolean return
+predicate<String> p  ->  list.add(s);
+//consumer has a void return
+consumer<String> p -> list.add(s);
+```
+
+下面的lambda表达式为什么是错的？
+
+```java
+Object  o  =  ()->{System.out.println("tricky example");};
+```
+
+该lambda表达式的内容是Object作为其Target Object，但是Object 并不是一个functional interface 你可以将Object去换成一个functional interface，例如 Runnable
+
+```java
+Runnabke o = () -> {System.out.println("tricky example");};
+```
+
+你已经知道了target type 在什么时候可以被用在特别的代码中！
+
+### Type interface
+
+你可以进一步简化你的代码。Java程序在编译的时候会去判断你到底关联了哪个lambda表达式从上下文中，也会去推断其功能的返回值是否适合target  type ，这有益于我们使用lambda表达式作为方法的参数使用，而且这可以在lambda 的语法中忽略！
+
+#### java编译lambda表达式的过程：
+
+1. 记住这一点，当一个lambda表达式的只有一个可推断其类型的参数时，在参数旁边的圆括号可以被省略
+
+   ```java
+   List<Apple> greenApple = filter(inventory, a -> a.weight()==10);
+   ```
+
+2. 当表达式中有多个参数的时候，我们将参数的类型定义好可以使我们的代码更加明确，下面的两个都是对的，但是哪个更好就是因人而异了！
+
+3. ```java
+   Comparetor<Apple> c = (Apple a1,Apple a2) -> (a1.getWeight()).compareTo(a2.getWeight());
+   Comparetor<Apple> c = (a1,a2) -> (a1.getWeight()).compareTo(a2.getWeight());
+   ```
+
+### 使用成员变量
+
+在lambda中，我们知道可以使用我们自己定义的变量，比如
+$$
+(Apple a1,Apple a2) -> (a1.getWeight()).compareTo(a2.getWeight())
+$$
+同样在lambda中，我们也可以使用已经定义好的成员变量，比如
+$$
+int port = 1337;
+
+Runnable = （）-> System.out.println(port);
+$$
+
+```java
+		int port = 100;
+		Runnable a = () -> System.out.println(port);
+		a.run();
+		port = 200;
+```
+
+上面的这段代码会编译报错，因为在lambda表达式中使用的变量只能又一次赋值，或者是final类型的数据！
+
+### lambda在本地变量中的限制
+
+你可能会问在lambda中使用实例变量为什么会有那么多的限制，比如上面的代码！
+
+首先，成员变量存储在堆(heap)中，本地变量存储在栈中，如果我们使用lambda表达式在一个单独的线程中，lambda会将使用的local 变量来复制一份，而不是直接访问原有的变量，所以这就是为什么在lambda中使用的本地变量我们只允许编辑一次！
+

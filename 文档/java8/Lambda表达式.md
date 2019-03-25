@@ -293,3 +293,19 @@ $$
 你可能会问在lambda中使用实例变量为什么会有那么多的限制，比如上面的代码！
 
 首先，成员变量存储在堆(heap)中，本地变量存储在栈中，如果我们使用lambda表达式在一个单独的线程中，lambda会将使用的local 变量来复制一份，而不是直接访问原有的变量，所以这就是为什么在lambda中使用的本地变量我们只允许编辑一次！
+
+### Method Reference
+
+Method Reference 可以让你重新使用已经存在了的方法而且可以使用他们就像lambda表达式！
+
+你为什么要关心Method Reference呢？Method Reference的主要思想是**直接调用这个方法**
+
+```java
+(Apple) -> a.getWeight()       							Apple::getWeight
+() -> Thread.courentThread.dumpStacks()     Thread.courentThread()::dumpStack
+(String i) -> str.subString(i)							String::subString
+(String s) -> System.out.println(s)					System.out::println
+```
+
+这是一种简便方法可以让我们用更简洁的方式来表达相同的意思！
+

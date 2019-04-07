@@ -305,7 +305,137 @@ Method Reference 可以让你重新使用已经存在了的方法而且可以使
 () -> Thread.courentThread.dumpStacks()     Thread.courentThread()::dumpStack
 (String i) -> str.subString(i)							String::subString
 (String s) -> System.out.println(s)					System.out::println
+//比较的方法
+		List<String> list = Arrays.asList("lili","mimi","gigi","yiyi"); 
+		list.sort(new Comparator<String>() {
+
+			@Override
+			public int compare(String o1, String o2) {
+				return o1.hashCode() - o2.hashCode();
+			}
+		});
+//使用lambda表达式
+list.sort((String s,String s1) -> s.hashCode()-s1.hashCode());
 ```
 
 这是一种简便方法可以让我们用更简洁的方式来表达相同的意思！
+
+### 构建Method Reference的窍门
+
+这里有三种构造Method Reference的方法：
+
+1. 对于静态方法的Method Reference
+
+   ```java
+   Integer::parseInt
+   
+   (args) -> ClassName.staticMethod(args)
+   ClassName::staticMethod;
+   ```
+
+2. 对于任意类型的Instence method
+
+   ```java
+   (String s) -> s.length();
+   String::length
+   
+   (arg1,rest) -> args.instanceMethod(rest)
+   ClassName::instanceMethod
+   ```
+
+3. 对于一个已经存在的对象的instance method
+
+   ```java
+   experence()->expensiveTransaction.getValue();
+   expenciveTransaction::getValue;
+   
+   //args is a type of expr,and instance method is a args method
+   (args) -> expr.instanceMethod(args);
+   expr::instanceMethod
+   ```
+
+练习：
+
+```java
+Function<String,Integer> StringToInteger = (String s) -> Integer.parseInt(s);
+Integer apply = StringToInteger.apply("12");
+//转换为Method Interface
+Function<String, Integer> StringToMethod = Integer::parseInt;
+Integer apply2 = StringToMethod.apply("12");
+```
+
+这个lambda表达式是将String类型转换为Integer类型的静态方法，用这种简单方法可以达到同样的结果！
+
+```java
+BiPredicate<List<String>, String> predicate = (list1,element) -> list.contains(element);
+boolean test = predicate.test(list, "gigi");
+
+BiPredicate< List<String>, String> predicateM = List::contains;
+boolean test = predicateM.test(list, "gigi");
+```
+
+使用method interface 来简化代码
+
+```java
+Predicate<String> pre = (s) -> s.length()> 4;
+Predicate<String> preg = (s) -> s.contains("gigi");
+Predicate<String> prem = "gigi"::contains;
+list.stream().filter(pre);
+```
+
+```java
+public class Apple {
+	private int weight;
+	
+	public Apple(int weight) {
+		super();
+		this.weight = weight;
+	}
+	public int getWeight() {
+		return weight;
+	}
+	public void setWeight(int weight) {
+		this.weight = weight;
+	}
+	public static void main(String[] args) {
+		List<Apple> list = new ArrayList<Apple>();
+		list.add(new Apple(1));
+		list.add(new Apple(3));
+		list.add(new Apple(2));
+		list.add(new Apple(4));
+		Comparator<Apple> c = Comparator.comparing(Apple::getWeight);
+		list.sort(c);
+	}
+}
+```
+
+```java
+public class Letter {
+
+	public static String addHeader(String text) {
+		return "it's time to "+ text;
+	}
+	public static String addFooter(String text) {
+		return "it's footer "+ text;
+	}
+	
+	public static String checkSpelling(String text) {
+		return text.replaceAll("labda", "lambda");
+	}
+	public static void main(String[] args) {
+		Function<String,String> addHeader = Letter::addHeader;
+		
+		Function<String,String> transfer = addHeader.andThen(Letter::addFooter).andThen(Letter::checkSpelling);
+	}
+}
+```
+
+### SUMMARY
+
+1. 一个lambda表达式可以理解为一种匿名的函数，它没有名字，但是他有一系列的参数，一个体，一个返回值，可能还有一系列抛出的异常！
+2. lambda可以使代码简洁明了
+3. 一个Functional interface声明其实是一个抽象方法
+4. java8提供了几种方法：Predicate<T> ,Function<T,R>,Supplier<T>,Consumer<T>,BinaryOperator<T>
+
+## Stream
 

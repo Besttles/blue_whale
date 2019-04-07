@@ -250,5 +250,222 @@ Znode：类似于Unix系统的文件目录结构，可以存储或者获取数�
 
 集群管理：
 
+## Zookeeper分布式锁
 
+**分布式锁：**分布式锁是控制分布式系统之间同步访问共享资源的一种方式。在[分布式系统](https://baike.baidu.com/item/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/4905336)中，常常需要协调他们的动作。如果不同的系统或是同一个系统的不同主机之间共享了一个或一组资源，那么访问这些资源的时候，往往需要互斥来防止彼此干扰来保证[一致性](https://baike.baidu.com/item/%E4%B8%80%E8%87%B4%E6%80%A7/9840083)，在这种情况下，便需要使用到分布式锁。
+
+在[分布式系统](https://baike.baidu.com/item/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F)中，常常需要协调他们的动作。如果不同的系统或是同一个系统的不同主机之间共享了一个或一组资源，那么访问这些资源的时候，往往需要互斥来防止彼此干扰来保证[一致性](https://baike.baidu.com/item/%E4%B8%80%E8%87%B4%E6%80%A7)，这个时候，便需要使用到分布式锁。
+
+### zookeeper实现分布式锁
+
+#### 获取连接zookeeper服务器
+
+```java
+	public void connectZooKeeper(String zkhosts, String lockName)
+			throws KeeperException, InterruptedException,
+			IOException {
+		Stat rootStat = null;
+		Stat lockStat = null;
+		if (StringUtils.isBlank(zkhosts)) {
+			throw new PandaLockException("zookeeper hosts can not be blank");
+		}
+		if (StringUtils.isBlank(lockName)) {
+			throw new PandaLockException("lockName can not be blank");
+		}
+		if (pandaZk == null) {
+			pandaZk = new ZooKeeper(zkhosts, DEFAULT_SESSION_TIMEOUT,
+					new Watcher() {
+
+						@Override
+						public void process(WatchedEvent event) {
+							if (event.getState().equals(
+									KeeperState.SyncConnected)) {
+								latch.countDown();
+							}
+
+						}
+					});
+		}
+		latch.await();
+		rootStat = pandaZk.exists(ROOT_PANDALOCK_NODE, false);
+		if (rootStat == null) {
+			rootPath = pandaZk.create(ROOT_PANDALOCK_NODE, null,
+					Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+		} else {
+			rootPath = ROOT_PANDALOCK_NODE;
+		}
+		String lockNodePathString = ROOT_PANDALOCK_NODE + SEPARATOR + lockName;
+		lockStat = pandaZk.exists(lockNodePathString, false);
+		if (lockStat != null) {// 说明此锁已经存在
+			lockPath = lockNodePathString;
+			// throw new
+			// PandaLockException("the lockName is already exits in zookeeper, please check the lockName :"
+			// +lockName);
+		} else {
+			// 创建相对应的锁节点
+			lockPath = pandaZk.create(lockNodePathString, null,
+					Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+		}
+
+		this.lockName = lockName;
+	}
+
+```
+
+Stat 类，节点信息类
+
+```java
+public class Stat implements Record {
+  private long czxid;
+  private long mzxid;
+  private long ctime;
+  private long mtime;
+  private int version;
+  private int cversion;
+  private int aversion;
+  private long ephemeralOwner;
+  private int dataLength;
+  private int numChildren;
+  private long pzxid;
+}
+```
+
+新建ZkClient类，用于连接zookeeper节点，实现永久监听
+
+以下逻辑是实现的是生产者和消费者模型，消费者监听某一路径下面子节点的变化，当生产者有消息发送过来的时候，在该节点下面创建一个子节点，然后把消息放到该子节点里面，这会触发消费者的process方法被调用，然后消费者取到该节点下面的子节点(顺便设置一个再监听该节点的子节点)，然后取出子节点的内容，做处理，然后删除该子节点。
+
+```java
+		if (pandaZk == null) {
+			pandaZk = new ZooKeeper(zkhosts, DEFAULT_SESSION_TIMEOUT,
+					new Watcher() {
+
+						@Override
+						public void process(WatchedEvent event) {
+							if (event.getState().equals(
+									KeeperState.SyncConnected)) {
+								latch.countDown();
+							}
+
+						}
+					});
+		}
+```
+
+查看节点是否存在,如果节点不存在，创建节点
+
+```java
+		rootStat = pandaZk.exists(ROOT_PANDALOCK_NODE, false);
+		if (rootStat == null) {
+			rootPath = pandaZk.create(ROOT_PANDALOCK_NODE, null,
+					Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+		} else {
+			rootPath = ROOT_PANDALOCK_NODE;
+		}
+```
+
+创建锁节点
+
+```java
+		lockStat = pandaZk.exists(lockNodePathString, false);
+		if (lockStat != null) {// 说明此锁已经存在
+			lockPath = lockNodePathString;
+			// throw new
+			// PandaLockException("the lockName is already exits in zookeeper, please check the lockName :"
+			// +lockName);
+		} else {
+			// 创建相对应的锁节点
+			lockPath = pandaZk.create(lockNodePathString, null,
+					Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+		}
+```
+
+#### 加锁
+
+```java
+	@Override
+	public void lock(){
+		if (StringUtils.isBlank(rootPath) || StringUtils.isBlank(lockName)
+				|| pandaZk == null) {
+			throw new PandaLockException(
+					"you can not lock anyone before you dit not connectZookeeper");
+		}
+		List<String> allCompetitorList = null;
+		try {
+		createComPrtitorNode();
+			allCompetitorList = pandaZk.getChildren(lockPath, false);
+		} catch (KeeperException e) {
+			throw new PandaLockException("zookeeper connect error");
+		} catch (InterruptedException e) {
+			throw new PandaLockException("the lock has  been Interrupted");
+		}
+		Collections.sort(allCompetitorList);
+		int index = allCompetitorList.indexOf(thisCompetitorPath
+				.substring((lockPath + SEPARATOR).length()));
+		if (index == -1) {
+			throw new PandaLockException("competitorPath not exit after create");
+		} else if (index == 0) {// 如果发现自己就是最小节点,那么说明本人获得了锁
+			return;
+		} else {// 说明自己不是最小节点
+			waitCompetitorPath = lockPath+SEPARATOR + allCompetitorList.get(index - 1);
+             // 在waitPath上注册监听器, 当waitPath被删除时, zookeeper会回调监听器的process方法
+            Stat waitNodeStat;
+			try {
+				waitNodeStat = pandaZk.exists(waitCompetitorPath, new Watcher() {
+					@Override
+					public void process(WatchedEvent event) {
+						if (event.getType().equals(EventType.NodeDeleted)&&event.getPath().equals(waitCompetitorPath)) {
+							getTheLocklatch.countDown();
+						}
+					}
+				});
+				 if (waitNodeStat==null) {//如果运行到此处发现前面一个节点已经不存在了。说明前面的进程已经释放了锁
+		            	return;
+					}else {
+						getTheLocklatch.await();
+						return;
+					}
+			} catch (KeeperException e) {
+				throw new PandaLockException("zookeeper connect error");
+			} catch (InterruptedException e) {
+				throw new PandaLockException("the lock has  been Interrupted");
+			}
+		}
+	}
+```
+
+创建竞争者节点
+
+```java
+	/**
+	 * 创建竞争者节点
+	 * 
+	 * @throws KeeperException
+	 * @throws InterruptedException
+	 */
+	private void createComPrtitorNode() throws KeeperException, InterruptedException {
+		competitorPath = lockPath + SEPARATOR + COMPETITOR_NODE;
+		thisCompetitorPath = pandaZk.create(competitorPath, null, Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+	}
+```
+
+释放节点
+
+```java
+	public void releaseLock() {
+		if (StringUtils.isBlank(rootPath) || StringUtils.isBlank(lockName) || pandaZk == null) {
+			throw new PandaLockException("you can not release anyLock before you dit not initial connectZookeeper");
+		}
+		try {
+
+			pandaZk.delete(thisCompetitorPath, -1);
+
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			throw new PandaLockException("the release lock has been Interrupted ");
+		} catch (KeeperException e) {
+			throw new PandaLockException("zookeeper connect error");
+		}
+
+	}
+```
 

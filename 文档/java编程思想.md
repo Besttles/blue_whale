@@ -81,3 +81,5 @@ public class CountedInteger {
 
 ```
 
+## java的动态代理
+

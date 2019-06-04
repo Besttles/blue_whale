@@ -4,6 +4,10 @@
     <br>
 <a href="https://github.com/Besttles/DataStructure"> <img src="https://img.shields.io/github/last-commit/Besttles/blue_whale/master.svg"></a>
     <a href="https://github.com/Besttles/DataStructure"> <img src="https://img.shields.io/github/contributors/Besttles/blue_whale.svg"></a>
+        <a href="https://github.com/Besttles/DataStructure"> <img src="https://img.shields.io/github/commit-activity/m/Besttles/blue_whale.svg"></a>
+    <br/>
+    <a href="https://github.com/Besttles/DataStructure"> <img src="https://img.shields.io/badge/%E5%85%AC%E4%BC%97%E5%8F%B7-%E7%A8%8B%E5%BA%8F%E5%91%98%E6%9D%83%E5%A8%81%E6%8C%87%E5%8D%97-green.svg"></a>
+        <a href="https://github.com/Besttles/DataStructure"> <img src="https://img.shields.io/badge/%E5%BE%AE%E5%8D%9A-%E6%9C%89%E7%82%B9%E5%86%B7%E7%9A%84%E5%90%BE%E5%85%88%E6%A3%AE-yellow.svg"></a>
 </div> 
 <br>
 

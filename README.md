@@ -2,7 +2,8 @@
 <br>
 <div align="left">
     <br>
-    <a href="https://github.com/Besttles/DataStructure"> <img src="https://img.shields.io/badge/>-read-4ab8a1.svg"></a>  <a href="https://github.com/Besttles/SpringBootDemo"> <img src="https://img.shields.io/badge/_-more-4ab8a1.svg"></a> <a href="https://github.com/Besttles/DataStructure"> <img src="https://img.shields.io/github/last-commit/Besttles/blue_whale/master.svg"></a>
+<a href="https://github.com/Besttles/DataStructure"> <img src="https://img.shields.io/github/last-commit/Besttles/blue_whale/master.svg"></a>
+    <a href="https://github.com/Besttles/DataStructure"> <img src="https://img.shields.io/github/contributors/Besttles/blue_whale.svg"></a>
 </div> 
 <br>
 

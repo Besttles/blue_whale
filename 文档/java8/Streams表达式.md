@@ -151,4 +151,37 @@ public class StreamOpration {
 
 ## Getting start with streams
 
-我们开始来
+​	我们开始来讨论streams是从集合Collection开始的，因为这是我们使用Streams的最简单的方式，在java8 的java.util.stream.Stream包中，在后面的章节中你也可以看到streams的各种各样的用法！
+
+​	究竟什么是Streams？一个简短确切的描述就是：一系列的数据处理操作（a sequence of element from a source that support datas processing opration）
+
+![](/Users/biwh/Desktop/blue_whale/文档/java8/assets/IMG_B2646F7E330D-1.jpeg)
+
+![](/Users/biwh/Desktop/blue_whale/文档/java8/assets/IMG_CFB7EE8452F9-1.jpeg)
+
+![](/Users/biwh/Desktop/blue_whale/文档/java8/assets/IMG_9128FC929C44-2.jpeg)
+
+ 除此之外，Stream还有两个重要的特性
+
+- 管道传输：许多的Stream操作返回的是本身，可以链式的进行下面的操作
+- 内部迭代：集合的构造，可以使用迭代器来循环数据
+
+示例：
+
+```java
+		List<String> collect = menu.stream()
+				.filter(d -> d.getCalorious() > 300)
+				.sorted(Comparator.comparing(Dishes::getCalorious))
+				.map(Dishes::getName)
+				.limit(2)
+				.collect(Collectors.toList());
+```
+
+![](/Users/biwh/Desktop/blue_whale/文档/java8/assets/IMG_2BA40AA9E433-1.jpeg)
+
+## Streams 和 Collections
+
+​	举个例子，我们有一个电影存储在DVD中，这是一个集合，因为所有的数据都保存在DVD中，现在我们将数据通过网络以数据流的方式获取，我们只需要先下载我们正在看的这一部分数据！
+
+![](/Users/biwh/Desktop/blue_whale/文档/java8/assets/IMG_BCB86B1A670D-1.jpeg)
+

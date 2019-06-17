@@ -250,7 +250,7 @@ public Object getAspectInstance() {
 
 ## 代理子类生成
 
-关键在于AspectJAwareAdvisorAutoProxyCreator，此对象在ConfigBeanDefinitionParser的configureAutoProxyCreator方法中注册，其类图:
+关键在于AspectJAwareAdvisorAutoProxyCreator，此对象在**ConfigBeanDefinitionParser**的**configureAutoProxyCreator**方法中注册，其类图:
 
 ![AspectJAwareAdvisorAutoProxyCreator类图](images/AspectJAwareAdvisorAutoProxyCreator.jpg)
 
@@ -281,7 +281,7 @@ Object beanInstance = doCreateBean(beanName, mbdToUse, args);
 
 #### 源码
 
-AbstractAutoProxyCreator.postProcessBeforeInstantiation:
+**AbstractAutoProxyCreator**.postProcessBeforeInstantiation:
 
 ```java
 @Override

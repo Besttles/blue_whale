@@ -77,7 +77,7 @@ public abstract class BeanUtils {
 					if (readMethod != null &&
 							ClassUtils.isAssignable(writeMethod.getParameterTypes()[0], readMethod.getReturnType())) {
 						try {
-                   //判断该属性是否私有，若非私有，则开启访问权限
+                   //判断该属性是否私有，若为私有，则开启访问权限
 					if (!Modifier.isPublic(readMethod.getDeclaringClass().getModifiers())) {
 								readMethod.setAccessible(true);
 							}
@@ -245,14 +245,14 @@ String simpleClassName = aClass.getSimpleName();
 
 可以通过 Class 对象来访问一个类的修饰符， 即public,private,static 等等的关键字，你可以使用如下方法来获取类的修饰符：
 
-```
-Class  aClass = ... //获取Class对象，具体方式可见Class对象小节
+```java
+Class  aClass =  //获取Class对象，具体方式可见Class对象小节
 int modifiers = aClass.getModifiers();
 ```
 
 修饰符都被包装成一个int类型的数字，这样每个修饰符都是一个位标识(flag bit)，这个位标识可以设置和清除修饰符的类型。 可以使用 java.lang.reflect.Modifier 类中的方法来检查修饰符的类型：
 
-```
+```java
 Modifier.isAbstract(int modifiers);
 Modifier.isFinal(int modifiers);
 Modifier.isInterface(int modifiers);
@@ -271,8 +271,8 @@ Modifier.isVolatile(int modifiers);
 
 可以使用 Class 对象通过如下的方式获取包信息：
 
-```
-Class  aClass = ... //获取Class对象，具体方式可见Class对象小节
+```java
+Class  aClass = Class.forName(className); //获取Class对象，具体方式可见Class对象小节
 Package package = aClass.getPackage();
 ```
 
@@ -282,7 +282,7 @@ Package package = aClass.getPackage();
 
 通过 Class 对象你可以访问类的父类，如下例：
 
-```
+```java
 Class superclass = aClass.getSuperclass();
 ```
 
@@ -313,7 +313,7 @@ Constructor[] constructors = aClass.getConstructors();
 
 你可以通过如下方式访问一个类的所有方法：
 
-```
+```java
 Method[] method = aClass.getMethods();
 ```
 
@@ -421,6 +421,7 @@ System.out.println("boring1");
 public class SelectionMethod {
 	public static void main(String[] args) {
 
+        //使用父类的构造器
 		SomeMethod proxy = (SomeMethod) Proxy.newProxyInstance(SomeMethod.class.getClassLoader(),
 				new Class[] { SomeMethod.class }, new MethodHandler(new Impletation()));
 		proxy.boring1();

@@ -9,7 +9,7 @@
 
 ---
 
-￼Nginx做为一款高性能的HTTP反向代理服务器，有极高的执行效率、简单灵活的配置。
+￼Nginx做为一款高性能的**HTTP反向代理服务器**，有极高的执行效率、简单灵活的配置。
 
 Nginx使用epoll和kqueue网络的I/O模型，而apache使用的是传统的select模型。
 
@@ -32,6 +32,8 @@ Nginx使用epoll和kqueue网络的I/O模型，而apache使用的是传统的sele
 **Nginx、Apache、Lighttpd的对比：**
 
 ![image](img/3.png)
+
+<div align="center"> <img src=""/> </div><br>
 
 Nginx的主配置文件为nginx.conf，下面是Web Server的完整配置示例。
 

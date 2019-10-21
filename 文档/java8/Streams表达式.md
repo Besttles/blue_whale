@@ -175,6 +175,13 @@ public class StreamOpration {
 				.map(Dishes::getName)
 				.limit(2)
 				.collect(Collectors.toList());
+
+            List<PipedWriter> p = new ArrayList<>();
+            p.stream().distinct().peek(
+                   a ->  System.out.println("") //做外部处理 无返回值
+            ).map((a) -> {
+                return a.getClass();  //匹配PipedWriter中的字段挑选出来
+            }).limit(100).collect(Collectors.toCollection(LinkedList::new));
 ```
 
 ![](/Users/biwh/Desktop/blue_whale/文档/java8/assets/IMG_2BA40AA9E433-1.jpeg)

@@ -465,7 +465,6 @@ public String frequencySort(String s) {
 它其实是三向切分快速排序的一种变种，在三向切分快速排序中，每次切分都将数组分成三个区间：小于切分元素、等于切分元素、大于切分元素，而该算法是将数组分成三个区间：等于红色、等于白色、等于蓝色。
 
 <div align="center"> <img src="pics/3b49dd67-2c40-4b81-8ad2-7bbb1fe2fcbd.png"/> </div><br>
-
 **按颜色进行排序** 
 
 [75. Sort Colors (Medium)](https://leetcode.com/problems/sort-colors/description/)
@@ -1180,7 +1179,6 @@ public List<Integer> diffWaysToCompute(String input) {
 ### BFS
 
 <div align="center"> <img src="pics/4ff355cf-9a7f-4468-af43-e5b02038facc.jpg"/> </div><br>
-
 广度优先搜索一层一层地进行遍历，每层遍历都以上一层遍历的结果作为起点，遍历一个距离能访问到的所有节点。需要注意的是，遍历过的节点不能再次被遍历。
 
 第一层：
@@ -1409,7 +1407,6 @@ private int getShortestPath(List<Integer>[] graphic, int start, int end) {
 ### DFS
 
 <div align="center"> <img src="pics/f7f7e3e5-7dd4-4173-9999-576b9e2ac0a2.png"/> </div><br>
-
 广度优先搜索一层一层遍历，每一层得到的所有新节点，要用队列存储起来以备下一层遍历的时候再遍历。
 
 而深度优先搜索在得到一个新节点时立即对新节点进行遍历：从节点 0 出发开始遍历，得到到新节点 6 时，立马对新节点 6 进行遍历，得到新节点 4；如此反复以这种方式遍历新节点，直到没有新节点了，此时返回。返回到根节点 0 的情况是，继续对根节点 0 进行遍历，得到新节点 2，然后继续以上步骤。
@@ -1720,7 +1717,6 @@ Backtracking（回溯）属于 DFS。
 [17. Letter Combinations of a Phone Number (Medium)](https://leetcode.com/problems/letter-combinations-of-a-phone-number/description/)
 
 <div align="center"> <img src="pics/a3f34241-bb80-4879-8ec9-dff2d81b514e.jpg"/> </div><br>
-
 ```html
 Input:Digit string "23"
 Output: ["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"].
@@ -2297,7 +2293,6 @@ private boolean isPalindrome(String s, int begin, int end) {
 [37. Sudoku Solver (Hard)](https://leetcode.com/problems/sudoku-solver/description/)
 
 <div align="center"> <img src="pics/1ca52246-c443-48ae-b1f8-1cafc09ec75c.png"/> </div><br>
-
 ```java
 private boolean[][] rowsUsed = new boolean[9][10];
 private boolean[][] colsUsed = new boolean[9][10];
@@ -2354,7 +2349,6 @@ private int cubeNum(int i, int j) {
 [51. N-Queens (Hard)](https://leetcode.com/problems/n-queens/description/)
 
 <div align="center"> <img src="pics/1f080e53-4758-406c-bb5f-dbedf89b63ce.jpg"/> </div><br>
-
 在 n\*n 的矩阵中摆放 n 个皇后，并且每个皇后不能在同一行，同一列，同一对角线上，求所有的 n 皇后的解。
 
 一行一行地摆放，在确定一行中的那个皇后应该摆在哪一列时，需要用三个标记数组来确定某一列是否合法，这三个标记数组分别为：列标记数组、45 度对角线标记数组和 135 度对角线标记数组。
@@ -2362,11 +2356,9 @@ private int cubeNum(int i, int j) {
 45 度对角线标记数组的长度为 2 \* n - 1，通过下图可以明确 (r, c) 的位置所在的数组下标为 r + c。
 
 <div align="center"> <img src="pics/85583359-1b45-45f2-9811-4f7bb9a64db7.jpg"/> </div><br>
-
 135 度对角线标记数组的长度也是 2 \* n - 1，(r, c) 的位置所在的数组下标为 n - 1 - (r - c)。
 
 <div align="center"> <img src="pics/9e80f75a-b12b-4344-80c8-1f9ccc2d5246.jpg"/> </div><br>
-
 ```java
 private List<List<String>> solutions;
 private char[][] nQueens;
@@ -2431,7 +2423,6 @@ private void backtracking(int row) {
 第 i 个楼梯可以从第 i-1 和 i-2 个楼梯再走一步到达，走到第 i 个楼梯的方法数为走到第 i-1 和第 i-2 个楼梯的方法数之和。
 
 <div align="center"><img src="https://latex.codecogs.com/gif.latex?dp[i]=dp[i-1]+dp[i-2]"/></div> <br>
-
 考虑到 dp[i] 只与 dp[i - 1] 和 dp[i - 2] 有关，因此可以只用两个变量来存储 dp[i - 1] 和 dp[i - 2]，使得原来的 O(N) 空间复杂度优化为 O(1) 复杂度。
 
 ```java
@@ -2460,7 +2451,6 @@ public int climbStairs(int n) {
 由于不能抢劫邻近住户，如果抢劫了第 i -1 个住户，那么就不能再抢劫第 i 个住户，所以
 
 <div align="center"><img src="https://latex.codecogs.com/gif.latex?dp[i]=max(dp[i-2]+nums[i],dp[i-1])"/></div> <br>
-
 ```java
 public int rob(int[] nums) {
     int pre2 = 0, pre1 = 0;
@@ -2512,7 +2502,6 @@ private   int rob(int[] nums, int first, int last) {
 综上所述，错误装信数量方式数量为：
 
 <div align="center"><img src="https://latex.codecogs.com/gif.latex?dp[i]=(i-1)*dp[i-2]+(i-1)*dp[i-1]"/></div> <br>
-
 **母牛生产** 
 
 [程序员代码面试指南-P181](#)
@@ -2522,7 +2511,6 @@ private   int rob(int[] nums, int first, int last) {
 第 i 年成熟的牛的数量为：
 
 <div align="center"><img src="https://latex.codecogs.com/gif.latex?dp[i]=dp[i-1]+dp[i-3]"/></div> <br>
-
 ### 矩阵路径
 
 **矩阵的最小路径和** 
@@ -2568,7 +2556,6 @@ public int minPathSum(int[][] grid) {
 题目描述：统计从矩阵左上角到右下角的路径总数，每次只能向右或者向下移动。
 
 <div align="center"> <img src="pics/7c98e1b6-c446-4cde-8513-5c11b9f52aea.jpg"/> </div><br>
-
 ```java
 public int uniquePaths(int m, int n) {
     int[] dp = new int[n];
@@ -2763,7 +2750,6 @@ public int numDecodings(String s) {
 因为在求 dp[n] 时可能无法找到一个满足条件的递增子序列，此时 {S<sub>n</sub>} 就构成了递增子序列，需要对前面的求解方程做修改，令 dp[n] 最小为 1，即：
 
 <div align="center"><img src="https://latex.codecogs.com/gif.latex?dp[n]=max\{1,dp[i]+1|S_i<S_n\&\&i<n\}"/></div> <br>
-
 对于一个长度为 N 的序列，最长递增子序列并不一定会以 S<sub>N</sub> 为结尾，因此 dp[N] 不是序列的最长递增子序列的长度，需要遍历 dp 数组找出最大值才是所要的结果，max{ dp[i] | 1 <= i <= N} 即为所求。
 
 **最长递增子序列** 
@@ -2928,7 +2914,6 @@ public int wiggleMaxLength(int[] nums) {
 综上，最长公共子序列的状态转移方程为：
 
 <div align="center"><img src="https://latex.codecogs.com/gif.latex?dp[i][j]=\left\{\begin{array}{rcl}dp[i-1][j-1]&&{S1_i==S2_j}\\max(dp[i-1][j],dp[i][j-1])&&{S1_i<>S2_j}\end{array}\right."/></div> <br>
-
 对于长度为 N 的序列 S<sub>1</sub> 和长度为 M 的序列 S<sub>2</sub>，dp[N][M] 就是序列 S<sub>1</sub> 和序列 S<sub>2</sub> 的最长公共子序列长度。
 
 与最长递增子序列相比，最长公共子序列有以下不同点：
@@ -2966,7 +2951,6 @@ public int lengthOfLCS(int[] nums1, int[] nums2) {
 第 i 件物品可添加也可以不添加，取决于哪种情况下最大价值更大。因此，0-1 背包的状态转移方程为：
 
 <div align="center"><img src="https://latex.codecogs.com/gif.latex?dp[i][j]=max(dp[i-1][j],dp[i-1][j-w]+v)"/></div> <br>
-
 ```java
 public int knapsack(int W, int N, int[] weights, int[] values) {
     int[][] dp = new int[N + 1][W + 1];
@@ -2989,7 +2973,6 @@ public int knapsack(int W, int N, int[] weights, int[] values) {
 在程序实现时可以对 0-1 背包做优化。观察状态转移方程可以知道，前 i 件物品的状态仅与前 i-1 件物品的状态有关，因此可以将 dp 定义为一维数组，其中 dp[j] 既可以表示 dp[i-1][j] 也可以表示 dp[i][j]。此时，
 
 <div align="center"><img src="https://latex.codecogs.com/gif.latex?dp[j]=max(dp[j],dp[j-w]+v)"/></div> <br>
-
 因为 dp[j-w] 表示 dp[i-1][j-w]，因此不能先求 dp[i][j-w]，以防将 dp[i-1][j-w] 覆盖。也就是说要先计算 dp[i][j] 再计算 dp[i][j-w]，在程序实现时需要按倒序来循环求解。
 
 ```java
@@ -3298,7 +3281,6 @@ public int combinationSum4(int[] nums, int target) {
 题目描述：交易之后需要有一天的冷却时间。
 
 <div align="center"> <img src="pics/a3da4342-078b-43e2-b748-7e71bec50dc4.png"/> </div><br>
-
 ```java
 public int maxProfit(int[] prices) {
     if (prices == null || prices.length == 0) {
@@ -3339,7 +3321,6 @@ The total profit is ((8 - 1) - 2) + ((9 - 4) - 2) = 8.
 题目描述：每交易一次，都要支付一定的费用。
 
 <div align="center"> <img src="pics/61942711-45a0-4e11-bbc9-434e31436f33.png"/> </div><br>
-
 ```java
 public int maxProfit(int[] prices, int fee) {
     int N = prices.length;
@@ -5295,7 +5276,6 @@ private void inOrder(TreeNode node, List<Integer> nums) {
 ### Trie
 
 <div align="center"> <img src="pics/5c638d59-d4ae-4ba4-ad44-80bdc30f38dd.jpg"/> </div><br>
-
 Trie，又称前缀树或字典树，用于判断字符串是否存在或者是否具有某种字符串前缀。
 
 **实现一个 Trie** 

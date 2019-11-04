@@ -30,6 +30,7 @@ public class DaoRTLogAspect {
         String method = pjp.getSignature().toString();
         Long _startTime = System.currentTimeMillis();
         try {
+            String ip = IPUtil.getIpAddr(request);
             return pjp.proceed();
         } finally {
             Long _wasteTime = System.currentTimeMillis() - _startTime;
@@ -45,3 +46,4 @@ public class DaoRTLogAspect {
 
 
 ```
+

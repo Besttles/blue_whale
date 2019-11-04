@@ -565,3 +565,15 @@ execution()是最常用的切点函数，其语法如下所示：
 (3)、包名：表示需要拦截的包名，后面的两个句点表示当前包和当前包的所有子包，com.sample.service.impl包、子孙包下所有类的方法。
 (4)、第二个*号：表示类名，*号表示所有的类。
 (5)、*(..):最后这个星号表示方法名，*号表示所有的方法，后面括弧里面表示方法的参数，两个句点表示任何参数。
+
+## ImmutableList
+
+ImmutableList是一个不可变、线程安全的列表集合，它只会获取传入对象的一个副本，而不会影响到原来的变量或者对象，如下代码：
+
+        int a = 23;
+        ImmutableList<Integer> list = ImmutableList.of(a, 12);
+        System.out.println(list);
+        a = 232;
+        System.out.println(list);
+
+ImmutableList创建不可变对象有两种方法，一种是使用静态of方法，另外一种是使用静态内部类Builder。

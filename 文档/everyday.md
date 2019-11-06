@@ -570,10 +570,35 @@ execution()是最常用的切点函数，其语法如下所示：
 
 ImmutableList是一个不可变、线程安全的列表集合，它只会获取传入对象的一个副本，而不会影响到原来的变量或者对象，如下代码：
 
-        int a = 23;
-        ImmutableList<Integer> list = ImmutableList.of(a, 12);
-        System.out.println(list);
-        a = 232;
-        System.out.println(list);
+```java
+    int a = 23;
+    ImmutableList<Integer> list = ImmutableList.of(a, 12);
+    System.out.println(list);
+```
 
 ImmutableList创建不可变对象有两种方法，一种是使用静态of方法，另外一种是使用静态内部类Builder。
+
+```java
+    //获取一个空的不可变集合对象
+    ImmutableList<String> list1 = ImmutableList .<String>of();
+    //获取一个有一个元素的不可变集合对象
+    ImmutableList<String> list2 = ImmutableList .<String>of("12");
+    //获取一个有两个元素的不可变集合对象
+    ImmutableList<String> list3 = ImmutableList .<String>of("12","23");
+```
+```java
+    List<String> list4 = new ArrayList<String>();
+    list4.add("1");
+    list4.add("2");
+    list4.add("3");
+    //copy数组list4的一个副本
+    List<String> list5 = ImmutableList .<String>copyOf(list4);
+```
+```java
+    //使用内部类的方式
+    ImmutableList<Integer> list = ImmutableList .<Integer>builder()
+                                                    .add(12)
+                                                    .add(23)
+                                                    .add(34)
+                                                    .build();
+```

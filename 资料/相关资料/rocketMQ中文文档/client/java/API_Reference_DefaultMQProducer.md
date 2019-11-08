@@ -62,7 +62,7 @@ public class Producer {
 |-------|------------|
 |DefaultMQProducer()|由默认参数值创建一个生产者 |
 |DefaultMQProducer(final String producerGroup)|使用指定的分组名创建一个生产者|
-|DefaultMQProducer(final String producerGroup, boolean enableMsgTrace)|使用指定的分组名创建一个生产者，并设置是否开启消息追踪|
+|DefaultMQProducer(final String producerGroup, boolean enableMsgTrace)|使用指定的分组名创建一个生产者，并设置是否开启消息追踪(*如果开启消息轨迹跟踪，用来存储消息轨迹数据所属的主题名称，默认为：RMQ_SYS_TRACE_TOPIC。*)|
 |DefaultMQProducer(final String producerGroup, boolean enableMsgTrace, final String customizedTraceTopic)|使用指定的分组名创建一个生产者，并设置是否开启消息追踪及追踪topic的名称|
 |DefaultMQProducer(RPCHook rpcHook)|使用指定的hook创建一个生产者|
 |DefaultMQProducer(final String producerGroup, RPCHook rpcHook)|使用指定的分组名及自定义hook创建一个生产者|

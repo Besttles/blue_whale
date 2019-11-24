@@ -223,3 +223,127 @@ public class StreamOpration {
 
 我们已经描述了集合和流之间的概念差异。具体来说，流利用内部迭代:迭代为您处理。但是，只有当您有一组要使用的预定义操作(例如，过滤器或映射)来隐藏迭代时，这才是有用的。大多数这些操作都将lambda表达式作为参数，因此您可以对它们的行为进行参数化，正如我们在前一章中所展示的那样。Java语言设计人员为Streams API提供了一个广泛的操作列表，您可以使用这些操作来表达复杂的数据处理查询。
 
+### Stream操作
+
+![IMG_2E928CA5F34E-1](/Users/biwh/Desktop/blue_whale/文档/java8/assets/IMG_2E928CA5F34E-1.jpeg)
+
+你可以使用两种类型的Stream操作
+
+1.过滤，限制数据调条数等操作数据管道，形成一个pipeline
+
+2.收集方法可以执行管道，并关闭管道
+
+![IMG_28B5D71085A9-1](assets/IMG_28B5D71085A9-1.jpeg)
+
+中间操作(如筛选或排序)返回另一个流作为返回类型。这允许将操作连接起来以形成查询。重要的是，在流管道上调用终端操作之前，中间操作不会执行任何处理——它们是惰性的。这是因为中间操作通常可以被终端操作合并并处理为一个单独的传递。
+
+~~~java
+        List<Dishes> menu = Arrays.asList(new Dishes(100, "红烧排骨",Type.FOOD),
+                new Dishes(20, "可乐",Type.DRINK),
+                new Dishes(40, "米饭",Type.FOOD),
+                new Dishes(120, "鸡柳",Type.FOOD),
+                new Dishes(200, "满汉全席",Type.FOOD));
+
+        menu.stream().filter(a -> {
+            System.out.println("filter:"+ a.getCalorious());
+            return a.getCalorious() > 40;
+        }).map( a -> {
+            System.out.println("map:"+ a.getName());
+            return a.getName();
+        }).limit(3).collect(Collectors.toList());
+~~~
+
+运行结果：
+
+~~~properties
+filter:100
+map:红烧排骨
+filter:20
+filter:40
+filter:120
+map:鸡柳
+filter:200
+map:满汉全席
+~~~
+
+由于流的惰性，你可以注意到这几个优化，首先很多菜的卡路里都超过了40，只有超过40的才会被选上，尽管filter和map是两个独立的操作，但他们被合并到一个pass中（技术循环融合）。
+
+### 终端操作
+
+终端操作通过流管道产生结果。结果是任何非流值，如列表、整数甚至void。例如，在下面的管道中，forEach是一个终端操作，它返回void并对源中的每个盘子应用lambda。
+
+~~~java
+collect.stream().forEach(System.out::println);
+~~~
+
+终端操作可以返回List，Integer，甚至是void，这样的的操作就是终端操作。
+
+### 总结：
+
+1.stream是一个序列的元素支持的数据处理操作
+
+2.stream使用内部迭代来操作数据，抽象出来筛选映射和排序等操作提供操作数据
+
+3.有两种操作。中级操作和终端操作
+
+4.使用过滤和匹配等方法可以返回一个流，用于搭建管道
+
+5.终端操作用于返回数据和结果
+
+# 使用Streams
+
+在前面，我们知道了Streams可以使用内部循环来代替for外部循环，可以不用去管理一个循环操作。我们可以使用streams的API来操作数据，你所需要的就仅仅是定义数据操作的流程。
+
+## 过滤和切片
+
+### Filter with a predicate
+
+Streams接口提供了filter的方法，参数为predicate类型的对象（一个返回boolean值的方法），返回Stream包括所有满足条件的元素。
+
+~~~java
+Predicate<Dishes> dishesPredicate = a -> "可乐".equals(a.getName());
+menu.stream().filter(dishesPredicate).collect(Collectors.toList()).forEach(System.out::println);
+~~~
+
+![IMG_D0E7BC7C0671-1](assets/IMG_D0E7BC7C0671-1.jpeg)
+
+### 过滤去重
+
+~~~java
+        menu.stream().filter(a -> a.getCalorious() > 100)
+                .distinct()
+                .collect(Collectors.toList());
+~~~
+
+### 截取Stream
+
+~~~java
+        menu.stream().filter(a -> a.getCalorious() > 100)
+                .limit(2)
+                .collect(Collectors.toList());
+~~~
+
+注意，limit也可以适用于无序流。
+
+~~~java
+        Set<Dishes> set = new HashSet<>();
+        set.add(new Dishes(100, "红烧排骨",Type.FOOD));
+        set.add(new Dishes(20, "可乐",Type.DRINK));
+        set.add(new Dishes(40, "米饭",Type.FOOD));
+        Set<Dishes> collect1 = set.stream().filter(a -> a.getCalorious() > 10)
+                .limit(2)
+                .collect(Collectors.toSet());
+        collect1.forEach(a -> System.out.println(a.getName()));
+~~~
+
+### 跳过元素
+
+skip方法会跳过前面n个元素，如果元素数量小于呢，那么就会返回空的Stream，注意skip和limit可以配套使用，
+
+~~~java
+        List<Dishes> dishes = menu.stream().filter(a -> a.getCalorious() > 100)
+                .limit(3)
+                .skip(1)
+                .collect(Collectors.toList());
+~~~
+

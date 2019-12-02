@@ -1,7 +1,7 @@
 > *Your heart is free. Have the courage to follow it.*
 >
-> ***Sometimes, the correct path is the tortured one.***
-> **有时候，正确之路是苦难之路。**
+> ***No one could ever replace you.***
+> ***你是独一无二的。***
 >
 > Don't you blink, you might miss it.
 

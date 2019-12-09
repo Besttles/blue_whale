@@ -344,6 +344,100 @@ skip方法会跳过前面n个元素，如果元素数量小于呢，那么就会
         List<Dishes> dishes = menu.stream().filter(a -> a.getCalorious() > 100)
                 .limit(3)
                 .skip(1)
+                .collect(Collectors.toList())	
+          
+~~~
+
+## Mapping
+
+就像是我们在SQL查询中，从所有数据中查询特定的字段，Mapping就是这样的一个方法，是我们从流中获取特定的数据！
+
+### map
+
+~~~java
+        List<String> collect2 = menu.stream()
+                .map(Dishes::getName)
                 .collect(Collectors.toList());
 ~~~
+
+Streams支持函数作为参数的映射，该函数作用与每个元素，将其映射到一个新的元素。
+
+~~~java
+        List<Integer> collect2 = menu.stream()
+                .map(Dishes::getName)
+                .map(String::length)
+                .collect(Collectors.toList());
+~~~
+
+上面的例子我们可以看到使用map获得的结果我们可以对map后的结果进行操作，继续使用map获取特定数据！
+
+### flatmap
+
+~~~java
+        List<String> collect3 = strings.stream().map(string -> string.split(""))
+                .flatMap(Arrays::stream)
+                .distinct()
+                .collect(Collectors.toList());
+~~~
+
+flatmap方法可以使所有独立的流合并为一个流。
+
+![IMG_273D17DDA3E9-1](/Users/biwh/Downloads/IMG_273D17DDA3E9-1.jpeg)
+
+![IMG_2FFB95C607BB-1](/Users/biwh/Desktop/blue_whale/文档/java8/assets/IMG_2FFB95C607BB-1.jpeg)
+
+## Finding  and matching
+
+### match
+
+```java
+boolean b = menu.stream().anyMatch(a -> a.getType() == Type.DRINK);
+```
+
+使用match函数可以使我们寻找特定类型的数据时候在集合中存在！
+
+这里有三种类型的函数供我们使用allMatch，anyMatch，noneMatch。
+
+### finding an element
+
+finfAny可以返回当前流的任意元素
+
+~~~java
+        Optional<Dishes> any = menu.stream().filter(a -> a.getType() == Type.DRINK)
+                .findAny();
+~~~
+
+### Optional 
+
+Optional是一个容器类，用于表示值的存在与不存在，它有几个重要的方法
+
+isPresent():如果容器中存在值就返回true
+
+T get():如果容器中存在就返回值，为空则返回NoMuchElement-Exception
+
+T orElse():if - else 模式
+
+~~~java
+        Dishes dish = new Dishes(100, "红烧排骨",Type.FOOD);
+        Dishes dishes1 = Optional.ofNullable(dish).orElse(face.getAll());
+~~~
+
+## Reducing
+
+###  Summing the element
+
+~~~java
+        List<Integer> integers = Arrays.asList(4,3,5,9);
+        Integer reduce = integers.stream().reduce(10, new BinaryOperator<Integer>() {
+            @Override
+            public Integer apply(Integer integer, Integer integer2) {
+                return integer + integer2;
+            }
+        });
+        System.out.println(reduce);
+        //同样的效果
+        integers.stream().reduce(0,Integer::sum);
+~~~
+
+![IMG_6D16B6BEE915-1](/Users/biwh/Desktop/blue_whale/文档/java8/assets/IMG_6D16B6BEE915-1.jpeg)
 

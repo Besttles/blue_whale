@@ -184,13 +184,13 @@ public class StreamOpration {
             }).limit(100).collect(Collectors.toCollection(LinkedList::new));
 ```
 
-![](/Users/biwh/Desktop/blue_whale/文档/java8/assets/IMG_2BA40AA9E433-1.jpeg)
+![](assets/IMG_2BA40AA9E433-1.jpeg)
 
 ## Streams 和 Collections
 
 ​	举个例子，我们有一个电影存储在DVD中，这是一个集合，因为所有的数据都保存在DVD中，现在我们将数据通过网络以数据流的方式获取，我们只需要先下载我们正在看的这一部分数据！
 
-![](/Users/biwh/Desktop/blue_whale/文档/java8/assets/IMG_BCB86B1A670D-1.jpeg)
+![](assets/IMG_BCB86B1A670D-1.jpeg)
 
 ### 遍历一次
 
@@ -219,7 +219,7 @@ public class StreamOpration {
 
 这正是您每天对Java集合所做的。您在外部迭代一个集合，显式地逐个提取和处理项。如果你能告诉Sofia，“把地板上所有的玩具都放到盒子里。”“有内部迭代比其他两个原因:首先,索非亚可以选择同时娃娃用一只手和球,第二,她可以决定采取最接近的对象框,然后其他人。同样，使用内部迭代，可以透明地并行完成项的处理，也可以按不同的顺序进行优化。如果您像在Java中那样在外部迭代集合，那么这些优化将是困难的。这可能看起来像是吹毛求疵，但它在很大程度上是Java 8引入流的核心——流库中的内部迭代可以自动选择数据表示和并行性的实现来匹配您的硬件。相比之下，一旦您通过为-each编写代码来选择了外部迭代，那么您基本上就可以自行管理任何并行性了。(在实践中，自我管理意味着“某天我们将并行化它”或“开始一场涉及任务和同步的漫长而艰巨的战斗”。)Java 8需要一个像Collection这样的接口，但是没有迭代器，因此流!图4.4说明了流(内部迭代)和集合(外部迭代)之间的区别。
 
-![](/Users/biwh/Desktop/blue_whale/文档/java8/assets/IMG_A2ECA580DB1C-1 2.jpeg)
+![](assets/IMG_A2ECA580DB1C-1 2.jpeg)
 
 我们已经描述了集合和流之间的概念差异。具体来说，流利用内部迭代:迭代为您处理。但是，只有当您有一组要使用的预定义操作(例如，过滤器或映射)来隐藏迭代时，这才是有用的。大多数这些操作都将lambda表达式作为参数，因此您可以对它们的行为进行参数化，正如我们在前一章中所展示的那样。Java语言设计人员为Streams API提供了一个广泛的操作列表，您可以使用这些操作来表达复杂的数据处理查询。
 
@@ -439,5 +439,5 @@ T orElse():if - else 模式
         integers.stream().reduce(0,Integer::sum);
 ~~~
 
-![IMG_6D16B6BEE915-1](/Users/biwh/Desktop/blue_whale/文档/java8/assets/IMG_6D16B6BEE915-1.jpeg)
+![IMG_6D16B6BEE915-1](assets/IMG_6D16B6BEE915-1.jpeg)
 

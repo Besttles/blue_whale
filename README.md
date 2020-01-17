@@ -1,7 +1,6 @@
 > *Your heart is free. Have the courage to follow it.*
 >
-> ***No one could ever replace you.***
-> ***你是独一无二的。***
+> ***Life is short, the world is wide.***
 >
 > Don't you blink, you might miss it.
 

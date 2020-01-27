@@ -8,7 +8,7 @@
 #### 1  Tags的使用
 
 一个应用尽可能用一个Topic，而消息子类型则可以用tags来标识。tags可以由应用自由设置，只有生产者在发送消息设置了tags，消费方在订阅消息时才可以利用tags通过broker做消息过滤：message.setTags("TagA")。  
- 
+
 #### 2 Keys的使用
 
 每个消息在业务层面的唯一标识码要设置到keys字段，方便将来定位消息丢失问题。服务器会为每个消息创建索引（哈希索引），应用可以通过topic、key来查询这条消息内容，以及消息被谁消费。由于是哈希索引，请务必保证key尽可能唯一，这样可以避免潜在的哈希冲突。
@@ -21,7 +21,7 @@
 ```
 #### 3 日志的打印
 
-​消息发送成功或者失败要打印消息日志，务必要打印SendResult和key字段。send消息方法只要不抛异常，就代表发送成功。发送成功会有多个状态，在sendResult里定义。以下对每个状态进行说明：     
+消息发送成功或者失败要打印消息日志，务必要打印SendResult和key字段。send消息方法只要不抛异常，就代表发送成功。发送成功会有多个状态，在sendResult里定义。以下对每个状态进行说明：     
 
 - **SEND_OK**
 
@@ -107,7 +107,7 @@ msgId一定是全局唯一标识符，但是实际使用中，可能会存在相
 
 
 #### 4 优化每条消息消费过程     
- 
+
 举例如下，某条消息的消费过程如下：
 
 - 根据消息从 DB 查询【数据 1】
@@ -139,7 +139,7 @@ msgId一定是全局唯一标识符，但是实际使用中，可能会存在相
 
 #### 1 关于消费者和订阅
 
-​第一件需要注意的事情是，不同的消费者组可以独立的消费一些 topic，并且每个消费者组都有自己的消费偏移量，请确保同一组内的每个消费者订阅信息保持一致。
+第一件需要注意的事情是，不同的消费者组可以独立的消费一些 topic，并且每个消费者组都有自己的消费偏移量，请确保同一组内的每个消费者订阅信息保持一致。
 
 #### 2 关于有序消息
 
@@ -172,9 +172,9 @@ msgId一定是全局唯一标识符，但是实际使用中，可能会存在相
 ## 3   Broker
 
 ### 3.1 Broker 角色
-​  Broker 角色分为 ASYNC_MASTER（异步主机）、SYNC_MASTER（同步主机）以及SLAVE（从机）。如果对消息的可靠性要求比较严格，可以采用 SYNC_MASTER加SLAVE的部署方式。如果对消息可靠性要求不高，可以采用ASYNC_MASTER加SLAVE的部署方式。如果只是测试方便，则可以选择仅ASYNC_MASTER或仅SYNC_MASTER的部署方式。
+  Broker 角色分为 ASYNC_MASTER（异步主机）、SYNC_MASTER（同步主机）以及SLAVE（从机）。如果对消息的可靠性要求比较严格，可以采用 SYNC_MASTER加SLAVE的部署方式。如果对消息可靠性要求不高，可以采用ASYNC_MASTER加SLAVE的部署方式。如果只是测试方便，则可以选择仅ASYNC_MASTER或仅SYNC_MASTER的部署方式。
 ### 3.2 FlushDiskType
-​ SYNC_FLUSH（同步刷新）相比于ASYNC_FLUSH（异步处理）会损失很多性能，但是也更可靠，所以需要根据实际的业务场景做好权衡。
+ SYNC_FLUSH（同步刷新）相比于ASYNC_FLUSH（异步处理）会损失很多性能，但是也更可靠，所以需要根据实际的业务场景做好权衡。
 ### 3.3 Broker 配置
 
 | 参数名                           | 默认值                        | 说明                                                         |
@@ -196,7 +196,7 @@ msgId一定是全局唯一标识符，但是实际使用中，可能会存在相
 
 ## 4  NameServer
 
-​RocketMQ 中，Name Servers 被设计用来做简单的路由管理。其职责包括：
+RocketMQ 中，Name Servers 被设计用来做简单的路由管理。其职责包括：
 
 - Brokers 定期向每个名称服务器注册路由数据。
 - 名称服务器为客户端，包括生产者，消费者和命令行客户端提供最新的路由信息。
@@ -205,7 +205,7 @@ msgId一定是全局唯一标识符，但是实际使用中，可能会存在相
 
 ## 5 客户端配置
 
-​ 相对于RocketMQ的Broker集群，生产者和消费者都是客户端。本小节主要描述生产者和消费者公共的行为配置。
+ 相对于RocketMQ的Broker集群，生产者和消费者都是客户端。本小节主要描述生产者和消费者公共的行为配置。
 
 ### 5.1 客户端寻址方式
 
@@ -327,7 +327,7 @@ DefaultMQProducer、TransactionMQProducer、DefaultMQPushConsumer、DefaultMQPul
 
 ### 6.1 JVM选项
 
-​ 推荐使用最新发布的JDK 1.8版本。通过设置相同的Xms和Xmx值来防止JVM调整堆大小以获得更好的性能。简单的JVM配置如下所示：
+ 推荐使用最新发布的JDK 1.8版本。通过设置相同的Xms和Xmx值来防止JVM调整堆大小以获得更好的性能。简单的JVM配置如下所示：
 ​  
 ​```
 ​
@@ -347,7 +347,7 @@ DefaultMQProducer、TransactionMQProducer、DefaultMQPushConsumer、DefaultMQPul
 -XX:InitiatingHeapOccupancyPercent=30
 ```
 
-​ 这些GC选项看起来有点激进，但事实证明它在我们的生产环境中具有良好的性能。另外不要把-XX:MaxGCPauseMillis的值设置太小，否则JVM将使用一个小的年轻代来实现这个目标，这将导致非常频繁的minor GC，所以建议使用rolling GC日志文件：
+ 这些GC选项看起来有点激进，但事实证明它在我们的生产环境中具有良好的性能。另外不要把-XX:MaxGCPauseMillis的值设置太小，否则JVM将使用一个小的年轻代来实现这个目标，这将导致非常频繁的minor GC，所以建议使用rolling GC日志文件：
 
 ```text
 -XX:+UseGCLogFileRotation   
@@ -362,7 +362,7 @@ DefaultMQProducer、TransactionMQProducer、DefaultMQPushConsumer、DefaultMQPul
 ```
 ### 6.2 Linux内核参数
 
-​ os.sh脚本在bin文件夹中列出了许多内核参数，可以进行微小的更改然后用于生产用途。下面的参数需要注意，更多细节请参考/proc/sys/vm/*的[文档](https://www.kernel.org/doc/Documentation/sysctl/vm.txt)
+ os.sh脚本在bin文件夹中列出了许多内核参数，可以进行微小的更改然后用于生产用途。下面的参数需要注意，更多细节请参考/proc/sys/vm/*的[文档](https://www.kernel.org/doc/Documentation/sysctl/vm.txt)
 
 - **vm.extra_free_kbytes**，告诉VM在后台回收（kswapd）启动的阈值与直接回收（通过分配进程）的阈值之间保留额外的可用内存。RocketMQ使用此参数来避免内存分配中的长延迟。（与具体内核版本相关）
 - **vm.min_free_kbytes**，如果将其设置为低于1024KB，将会巧妙的将系统破坏，并且系统在高负载下容易出现死锁。

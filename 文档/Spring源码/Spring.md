@@ -289,7 +289,7 @@ private String doResolvePlaceholders(String text, PropertyPlaceholderHelper help
 }
 ```
 
-其实代码执行到这里的时候还没有进行xml配置文件的解析，那么这里的解析placeHolder是什么意思呢，原因在于可以这么写:
+其实代码执行到这里的时候还没有进行xml配置 文件的解析，那么这里的解析placeHolder是什么意思呢，原因在于可以这么写:
 
 ```java
 System.setProperty("spring", "classpath");

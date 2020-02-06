@@ -231,3 +231,141 @@ class FactoryBeanTest implements FactoryBean{
     }
 ~~~
 
+ 
+
+### Spring
+
+#### AOP：
+
+将横切行的问题与业务逻辑进行分离处理，（AOP与OOP）
+
+对每个接口的处理，可以使用AOP的切面来进行功能拓展
+
+日志，权限，事务
+
+源码：本质？JDK动态代理，
+
+> JDK动态代理接口，cglib代理类
+
+对象是在什么时候被代理的？
+
+> idea条件断点，右键断点，condition中添加条件
+
+~~~java
+public class DefaultAopProxyFactory implements AopProxyFactory, Serializable {
+    public DefaultAopProxyFactory() {
+    }
+
+    public AopProxy createAopProxy(AdvisedSupport config) throws AopConfigException {
+        if(!config.isOptimize() && !config.isProxyTargetClass() && !this.hasNoUserSuppliedProxyInterfaces(config)) {
+            return new JdkDynamicAopProxy(config);
+        } else {
+            Class targetClass = config.getTargetClass();
+            if(targetClass == null) {
+                throw new AopConfigException("TargetSource cannot determine target class: Either an interface or a target is required for proxy creation.");
+            } else {
+              //创建一个AOP代理对象
+                return (AopProxy)(!targetClass.isInterface() && !Proxy.isProxyClass(targetClass)?new ObjenesisCglibAopProxy(config):new JdkDynamicAopProxy(config));
+            }
+        }
+    }
+
+    private boolean hasNoUserSuppliedProxyInterfaces(AdvisedSupport config) {
+        Class[] ifcs = config.getProxiedInterfaces();
+        return ifcs.length == 0 || ifcs.length == 1 && SpringProxy.class.isAssignableFrom(ifcs[0]);
+    }
+}
+~~~
+
+#### 为什么java动态代理必须是接口？
+
+因为在我们在生成代理类的时候
+
+~~~java
+        byte[] proxies = ProxyGenerator.generateProxyClass("$Proxy", new Class[]{CheckerType.class});
+
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream("CheckerType.class");
+            fileOutputStream.write(proxies);
+
+            fileOutputStream.flush();
+            fileOutputStream.close();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+~~~
+
+我们使用这个方法来生成代理类，生成的代理类
+
+~~~java
+public final class $Proxy extends Proxy implements CheckerType {}
+~~~
+
+我们可以看到在代理类中，继承了Proxy类，因为java为单继承语言，所以不能再去继承其他的类，这样我们只能去实现接口，所以JDK动态代理只能代理接口！
+
+#### IOC（Inversion of Control）
+
+**什么时候去创建bean？**
+
+容器初始化的时候加载所有的bean，添加到容器的注册表中
+
+**bean怎么注册到IOC容器中？**
+
+~~~java
+class MyImport implements ImportBeanDefinitionRegistrar{
+    @Override
+    public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry beanDefinitionRegistry) {
+        //bean定义 承载bean的属性（scope init-bean）
+        BeanDefinition beanDefinition = new RootBeanDefinition(User.class);
+        //建立一个映射
+        beanDefinitionRegistry.registerBeanDefinition("user" , beanDefinition);
+    }
+}
+~~~
+
+~~~java
+        ApplicationContext context = new ClassPathXmlApplicationContext("Spring.xml");
+        context.getBean("user");
+~~~
+
+~~~java
+public interface BeanDefinitionRegistry extends AliasRegistry {}
+//AliasRegistry 别名注册器 一个bean可以配置多个name
+~~~
+
+~~~java
+public interface AliasRegistry {
+    void registerAlias(String var1, String var2);
+
+    void removeAlias(String var1);
+
+    boolean isAlias(String var1);
+
+    String[] getAliases(String var1);
+}
+
+~~~
+
+BeanDefination的信息交给BeanFactory去生产
+
+~~~java
+        AbstractBeanDefinition beanDefinition = new RootBeanDefinition(User.class);
+
+        //添加属性信息
+        MutablePropertyValues mutablePropertyValues = new MutablePropertyValues();
+        mutablePropertyValues.setPropertyValueAt(new PropertyValue("name", "lili"),0);
+        mutablePropertyValues.setPropertyValueAt(new PropertyValue("age" , 10) , 0);
+        beanDefinition.setPropertyValues(mutablePropertyValues);
+        //BeanFactory
+        DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
+        factory.registerBeanDefinition("user" , beanDefinition);
+~~~
+
+使用beanFactory来加载bean
+
+容器启动的时候，什么时候来注册Bean的？
+
+xml配置文件中的Bean，是在创建BeanFactory的过程中注入到容器中
+
+注解中的Bean，是在调用postProcessBeanDefinitionRegistry()的时候注入到容器的
+

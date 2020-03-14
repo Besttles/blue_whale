@@ -602,3 +602,36 @@ ImmutableList创建不可变对象有两种方法，一种是使用静态of方�
                                                     .add(34)
                                                     .build();
 ```
+
+## 使用@RequestBody来接受Json类型的数据
+
+数据接收时会自动转型
+
+~~~json
+{
+	"a":"a",
+	"b":[{
+		"name":"c"
+	},{
+		"name":"d"
+	}]
+	}
+}
+~~~
+
+这样我们使用Map来接收时会在b里面存储LinkedList
+
+~~~json
+{
+	"a":"a",
+	"b":{
+		"c":"c",
+		"d":"d"
+	}
+}
+~~~
+
+这种情况就会在b下面存储LinkedHashMap
+
+也可以使用对象类型进行嵌套存储
+

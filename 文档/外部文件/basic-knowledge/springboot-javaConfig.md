@@ -29,7 +29,7 @@ public @interface SpringBootApplication {
 
 在src/main/resources的META-INF/spring.factories
 
-```
+```properties
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration,\
 org.springframework.boot.autoconfigure.aop.AopAutoConfiguration
@@ -52,7 +52,7 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration
 
 application.properties定义属性，直接使用@Value注入即可
 
-```
+```java
 public class A{
 	 @Value("${push.start:0}")    如果缺失，默认值为0
      private Long  id;
@@ -63,7 +63,7 @@ public class A{
 
 可以新建一个properties文件，ConfigurationProperties的属性prefix指定properties的配置的前缀，通过location指定properties文件的位置
 
-```
+```java
 @ConfigurationProperties(prefix="person")
 public class PersonProperties {
 	

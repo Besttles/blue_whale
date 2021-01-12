@@ -441,3 +441,13 @@ T orElse():if - else 模式
 
 ![IMG_6D16B6BEE915-1](assets/IMG_6D16B6BEE915-1.jpeg)
 
+reduce方法用于累加获得总体结果：
+
+```java
+int accResult = Stream.of(1, 2, 3, 4).reduce(0 ,(acc , item ) -> {  //0为累加的起始值
+	System.out.println("acc:"+acc);                                
+	System.out.println("item:"+item);                              
+	return acc+=item;                                              
+});                                                                
+```
+

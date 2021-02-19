@@ -45,7 +45,7 @@
 
 3. 你会使用加锁的方式来执行任务，当一个任务被分割成两个或者是多个子任务，子任务会等待任务全部结束
 
-4. 任务不会反悔任何结果，所以你要去使用基于RecursiveAction来实现
+4. 任务不会返回任何结果，所以你要去使用基于RecursiveAction来实现
 
    **创建物品类**
 
@@ -423,7 +423,7 @@ Main : The word appears 1001737 in the document
 
 ### 怎么实现的？
 
-DocumentTask：当传入的 $end-start>100​$ ,就会把任务分割成两部分，这两部分使用递归的方式来继续判断使用哪种方式继续执行！
+DocumentTask：当传入的 $end-start>100$ ,就会把任务分割成两部分，这两部分使用递归的方式来继续判断使用哪种方式继续执行！
 
 LineTask：$end-start>10$ 就会将任务分割成两部分，使用递归来实现！
 
@@ -543,7 +543,7 @@ ForkJoinPool同样也可以使用同步的额方式执行，你是用execute()�
 
 **get()：**方法可以返回compute()方法执行完后的结果，或者等待直到任务完成
 
-**get(long TIMEOUT,TimeUtil util)：**这个方法可以设置等待结果的时间，在时间到达后仍为返回结果，则返回null
+**get(long TIMEOUT,TimeUtil util)：**这个方法可以设置等待结果的时间，在时间到达后仍未返回结果，则返回null
 
 join()：不可以被打断，如果你打断了join()方法的执行，会抛出InterruptorException
 

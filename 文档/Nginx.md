@@ -38,7 +38,7 @@ Nginx使用epoll和kqueue网络的I/O模型，而apache使用的是传统的sele
 Nginx的主配置文件为nginx.conf，下面是Web Server的完整配置示例。
 
 
-```
+```properties
 #运行用户
 user www-data;    
 #启动进程,通常设置成和cpu的数量相等
@@ -146,11 +146,11 @@ http {
     }
      
      }
-}
+
 ```
 如果要使用负载均衡的话,可以修改配置http节点如下：
 
-```
+```properties
 #设定http服务器，利用它的反向代理功能提供负载均衡支持
 http {
      #设定mime类型,类型由mime.type文件定义

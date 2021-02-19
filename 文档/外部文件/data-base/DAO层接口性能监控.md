@@ -14,7 +14,7 @@
 
 **代码示例：**
 
-```
+```java
 @Aspect
 @Component
 public class DaoRTLogAspect {

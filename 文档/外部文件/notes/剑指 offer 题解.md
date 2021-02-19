@@ -1125,6 +1125,11 @@ public void reOrderArray(int[] nums) {
             nums[j++] = num;
     }
 }
+
+1 7 4 0 2 8 4 7 5 9 3
+    g         y
+    7.        4
+      g.        y
 ```
 
 # 22. 链表中倒数第 K 个结点

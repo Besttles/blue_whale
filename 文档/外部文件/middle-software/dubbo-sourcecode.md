@@ -58,7 +58,7 @@
 
 #### Spring识别并加载dubbo的xml配置
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -149,7 +149,7 @@ schema格式 | 类模板 | 内部属性|描述|
 
 URL格式：
 
-```
+```properties
 dubbo://192.168.21.58:20130/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=bbs-service&dubbo=2.5.3&interface=com.alibaba.dubbo.demo.DemoService&methods=getSimpleMemberByUids,getMasterMemberInfo,getUidsByWcuids,getUserInfoListByWcuids,getForumModeratorByUidAndFid,getMemberInfoByUsernames,clearMemberCache,getMemberCountByUids,addDav,updateBio,updateMemberCount,getLastTidsByUids,batchGetMemberProfileModel,getWcuidsByUids,isDav,getUidByWcuid,updateLastTid,saveName,getMemberDetailModelListByUids,register&pid=4481&revision=0.0.1&side=provider&threadpool=cached&threads=200&timestamp=1490614869341	
 ```
 

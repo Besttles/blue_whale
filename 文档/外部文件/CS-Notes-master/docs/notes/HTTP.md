@@ -76,7 +76,8 @@ URI 包含 URL 和 URN。
 <div align="center"> <img src="pics/HTTP_RequestMessageExample.png" width=""/> </div><br>
 ### 2. 响应报文
 
-<div align="center"> <img src="pics/HTTP_ResponseMessageExample.png" width=""/> </div><br>
+ <div align="center"> <img src="pics/HTTP_ResponseMessageExample.png" width=""/> </div><br>
+
 # 二、HTTP 方法
 
 客户端发送的  **请求报文**  第一行为请求行，包含了方法字段。

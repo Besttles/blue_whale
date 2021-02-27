@@ -223,7 +223,7 @@ typedef struct dictht {
 } dictht;
 ```
 
-```c
+```c++
 typedef struct dictEntry {
     void *key;
     union {

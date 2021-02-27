@@ -131,7 +131,7 @@ e.globalsession -- global session作用域类似于标准的HTTP Session作用�
 当设置为prototype时：每次连接请求，都会生成一个bean实例，也会导致一个问题，当请求数越多，性能会降低，因为创建的实例，导致GC频繁，gc时长增加
 ```
 
- **3.3.3 spring事务实现机制**
+**3.3.3 spring事务实现机制**
 
    1 高层
 
@@ -175,7 +175,7 @@ Spring中的AOP代理还是离不开Spring的IOC容器，代理的生成，管�
 
 在applicationContext.xml中配置下面一句:
 
-```
+```xml
 <aop:aspectj-autoproxy />
 ```
 

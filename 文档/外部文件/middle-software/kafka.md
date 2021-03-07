@@ -5,6 +5,7 @@
 * [Apache Kafaka源码剖析](kafka-sourcecode.md)
 * [kafka安装](kafka-setup.md)
 * [Kafka Java客户端---KClient](https://gitee.com/robertleepeak/kclient)
+* [kafka安装-zookeeper-kafka](https://www.cnblogs.com/luotianshuai/p/5206662.html)
 
 ---
 
@@ -75,7 +76,7 @@ Kafka集群会保留所有的消息，无论其被消费与否。两种策略删
 * http://zqhxuyuan.github.io/2016/10/27/Kafka-Definitive-Guide-cn-04/
 
  kafka 的消息模型是对 topic 分区以达到分布式效果。每个 topic 下的不同的 partitions (区)只能有一个 Owner 去消费。所以只有多个分区后才能启动多个消费者，对应不同的区去消费。其中协调消费部分是由 server 端协调而成。使用者不必考虑太多。只是消息的消费是无序的。
- 
+
 总结：如果想保证消息的顺序，那就用一个 partition。 kafka 的每个 partition 只能同时被同一个 group 中的一个 consumer 消费。
 
 ###  源码分析

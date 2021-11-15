@@ -40,7 +40,7 @@
 	
 	与CountdownLatch不同的是，它可以循环重用。
 	
-```
+```java
 import java.util.concurrent.CyclicBarrier;
 
 public class TestCyclicBarrier {

@@ -6,7 +6,7 @@
 
 * jvm虚拟机注册一个勾子，当虚拟机要关闭时，会执行预先注册的线程任务。
 
-```
+```java
 Runtime.getRuntime().addShutdownHook(new Thread() {
 
             public void run() {
@@ -21,12 +21,12 @@ Runtime.getRuntime().addShutdownHook(new Thread() {
             }
 
         });
- ```
- 
+```
+
  [ShutdownHook - java中优雅地停止服务](https://mp.weixin.qq.com/s/z5bfW8OJOYMK-fzSzDOkdg)
- 
+
  * 获取JVM的内存空间信息
- 
+
 ####2. 字符串操作
 
 * StringBuffer 线程安全
@@ -86,10 +86,10 @@ float和double无法做到准确的精度计数，如果需要精确的计算结
 public interface Comparable<T> {
    public int compareTo(T o);
 } 
- ```
- 
+```
+
 与Arrays.sort(Object[] a)方法或者Collections.sort(List<T> list)方法组合使用。
- 
+
 另一种用法：
 
 java.util.Collections.sort(List<T>, Comparator<? super T>)

@@ -506,6 +506,13 @@ public synchronized static void fun() {
 ReentrantLock 是 java.util.concurrent（J.U.C）包中的锁。
 
 ```java
+//是否为公平锁
+public ReentrantLock(boolean fair) {
+    sync = fair ? new FairSync() : new NonfairSync();
+}
+```
+
+```java
 public class LockExample {
 
     private Lock lock = new ReentrantLock();
